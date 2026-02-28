@@ -11,15 +11,23 @@ capybara-*.html
 rerun.txt
 pickle-email-*.html
 
-# Ignore all logfiles and tempfiles.
+# Ignore all logfiles and tempfiles for root app (if any).
 /log/*
 /tmp/*
 !/log/.keep
 !/tmp/.keep
 
+# Ignore Rails temp and log files for backend API app.
+backend/log/*
+backend/tmp/*
+!backend/log/.keep
+!backend/tmp/.keep
+
 # TODO Comment out this rule if you are OK with secrets being uploaded to the repo
 config/initializers/secret_token.rb
 config/master.key
+# Backend Rails app secrets (same principle as above)
+backend/config/master.key
 
 # Only include if you have production secrets in this file, which is no longer a Rails default
 # config/secrets.yml
@@ -52,6 +60,10 @@ bower.json
 
 # Ignore node_modules
 node_modules/
+
+# Local gem homes used temporarily during setup (do not commit)
+.gems
+.gems-*
 
 # Ignore precompiled javascript packs
 /public/packs
