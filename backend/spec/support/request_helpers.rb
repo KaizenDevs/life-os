@@ -15,5 +15,6 @@ module RequestHelpers
 end
 
 RSpec.configure do |config|
+  config.warnings = false
   config.include RequestHelpers, type: :request
 end

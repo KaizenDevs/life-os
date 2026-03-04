@@ -1,7 +1,7 @@
 # Life OS – run from repo root
 # Prerequisite: PostgreSQL running (locally or via Docker)
 
-.PHONY: setup db test run run-docker stop-docker dev stop-dev test-api
+.PHONY: setup db test run run-docker stop-docker dev stop-dev test-docker test-api
 
 # Install deps and create/migrate DB (requires Postgres)
 setup:
@@ -37,6 +37,10 @@ dev:
 # Stop dev stack
 stop-dev:
 	docker compose -f docker-compose.dev.yml down
+
+# Run tests inside the dev container
+test-docker:
+	docker compose -f docker-compose.dev.yml exec -e RAILS_ENV=test web bundle exec rspec
 
 # Quick API test (requires server running and a user); set TOKEN after sign-in
 test-api:
