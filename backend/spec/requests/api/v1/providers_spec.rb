@@ -17,14 +17,14 @@ RSpec.describe "Api::V1::Providers", type: :request do
     it "filters by category" do
       create(:provider, category: "plumber")
       create(:provider, :mechanic)
-      get api_v1_providers_path, params: { category: "mechanic" }, headers: auth_headers, as: :json
+      get "#{api_v1_providers_path}?category=mechanic", headers: auth_headers, as: :json
       expect(response.parsed_body["data"].size).to eq(1)
       expect(response.parsed_body["data"].first["category"]).to eq("mechanic")
     end
 
     it "can return archived with archived=true" do
       create(:provider, :archived, name: "Old")
-      get api_v1_providers_path, params: { archived: "true" }, headers: auth_headers, as: :json
+      get "#{api_v1_providers_path}?archived=true", headers: auth_headers, as: :json
       expect(response.parsed_body["data"].size).to eq(1)
       expect(response.parsed_body["data"].first["name"]).to eq("Old")
     end
@@ -60,7 +60,7 @@ RSpec.describe "Api::V1::Providers", type: :request do
         params: { provider: { name: "", category: "plumber" } },
         headers: auth_headers,
         as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.parsed_body["errors"]).to be_present
     end
   end
