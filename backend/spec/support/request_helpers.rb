@@ -7,6 +7,11 @@ module RequestHelpers
     { "Authorization" => "Bearer #{token}" }
   end
 
+  def super_admin_headers
+    user = create(:user, :super_admin)
+    auth_headers(user)
+  end
+
   def request_jwt(user)
     post user_session_path, params: { user: { email: user.email, password: user.password || "password123" } }, as: :json
     return nil unless response.successful?

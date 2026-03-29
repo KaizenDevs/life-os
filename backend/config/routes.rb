@@ -11,6 +11,14 @@ Rails.application.routes.draw do
           post :unarchive
         end
       end
+
+      resources :groups do
+        resources :memberships, only: [:index, :create, :update, :destroy] do
+          member do
+            post :accept
+          end
+        end
+      end
     end
   end
 end
