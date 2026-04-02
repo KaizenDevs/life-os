@@ -2,10 +2,10 @@ import { apiFetch } from "./client";
 import type { LifeOsModule, GroupModule } from "../types";
 
 export const fetchModules = () =>
-  apiFetch<{ data: LifeOsModule[] }>("/modules");
+  apiFetch<{ data: LifeOsModule[] }>("/life_os_modules");
 
 export const updateModule = (id: number, enabled: boolean) =>
-  apiFetch<{ data: LifeOsModule }>(`/modules/${id}`, {
+  apiFetch<{ data: LifeOsModule }>(`/life_os_modules/${id}`, {
     method: "PATCH",
     body: JSON.stringify({ enabled }),
   });
