@@ -8,6 +8,7 @@ FactoryBot.define do
     email { "contact@example.com" }
     address { "123 Main St" }
     notes { nil }
+    association :group
 
     trait :mechanic do
       category { "mechanic" }

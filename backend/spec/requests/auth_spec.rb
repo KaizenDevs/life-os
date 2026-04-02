@@ -23,16 +23,16 @@ RSpec.describe "Authentication", type: :request do
     end
   end
 
-  describe "GET /api/v1/providers (protected)" do
+  describe "GET /api/v1/groups (protected)" do
     it "returns 401 without token" do
-      get api_v1_providers_path, as: :json
+      get api_v1_groups_path, as: :json
       expect(response).to have_http_status(:unauthorized)
     end
 
     it "returns 200 with valid token" do
       user = create(:user)
       token = request_jwt(user)
-      get api_v1_providers_path, headers: { "Authorization" => "Bearer #{token}" }, as: :json
+      get api_v1_groups_path, headers: { "Authorization" => "Bearer #{token}" }, as: :json
       expect(response).to have_http_status(:ok)
     end
   end
