@@ -1,16 +1,32 @@
 import { useNavigate } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, Plus, Archive } from "lucide-react";
 import { useGroups } from "../hooks/useGroups";
+import { archiveGroup } from "../api/groups";
 
 export function GroupsPage() {
   const { data, isLoading } = useGroups();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const groups = data?.data ?? [];
+  const archiveMutation = useMutation({
+    mutationFn: (id: number) => archiveGroup(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["groups"] }),
+  });
+
+  const groups = (data?.data ?? []).filter((g) => !g.archived_at);
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <h2 className="text-lg font-semibold mb-4">Groups</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Groups</h2>
+        <button
+          onClick={() => navigate("/groups/new")}
+          className="flex items-center gap-1 text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus size={15} /> New group
+        </button>
+      </div>
 
       {isLoading && <p className="text-gray-400 text-sm">Loading…</p>}
 
@@ -20,10 +36,10 @@ export function GroupsPage() {
 
       <ul className="space-y-2">
         {groups.map((group) => (
-          <li key={group.id}>
+          <li key={group.id} className="flex items-center gap-2">
             <button
               onClick={() => navigate(`/groups/${group.id}/providers`)}
-              className="w-full bg-white rounded-xl p-4 flex justify-between items-center shadow-sm hover:shadow transition-shadow text-left"
+              className="flex-1 bg-white rounded-xl p-4 flex justify-between items-center shadow-sm hover:shadow transition-shadow text-left"
             >
               <div>
                 <p className="font-medium">{group.name}</p>
@@ -32,6 +48,15 @@ export function GroupsPage() {
                 </p>
               </div>
               <ChevronRight size={18} className="text-gray-300" />
+            </button>
+
+            {/* Archive */}
+            <button
+              onClick={() => archiveMutation.mutate(group.id)}
+              className="p-2 text-gray-300 hover:text-orange-400 transition-colors"
+              title="Archive group"
+            >
+              <Archive size={16} />
             </button>
           </li>
         ))}

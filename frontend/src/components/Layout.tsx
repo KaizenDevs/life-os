@@ -3,7 +3,7 @@
 // Desktop: sticky header + nav links inline
 
 import { NavLink, Outlet } from "react-router-dom";
-import { Building2 } from "lucide-react";
+import { Building2, Settings } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export function Layout() {
@@ -25,6 +25,14 @@ export function Layout() {
             >
               Groups
             </NavLink>
+            <NavLink
+              to="/categories"
+              className={({ isActive }) =>
+                `text-sm font-medium ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-800"}`
+              }
+            >
+              Categories
+            </NavLink>
           </nav>
         </div>
         <button
@@ -35,7 +43,7 @@ export function Layout() {
         </button>
       </header>
 
-      {/* Page content — extra bottom padding on mobile so content isn't hidden behind bottom nav */}
+      {/* Page content */}
       <main className="flex-1 pb-20 md:pb-0">
         <Outlet />
       </main>
@@ -53,6 +61,17 @@ export function Layout() {
           >
             <Building2 size={20} />
             Groups
+          </NavLink>
+          <NavLink
+            to="/categories"
+            className={({ isActive }) =>
+              `flex-1 flex flex-col items-center py-2 gap-1 text-xs ${
+                isActive ? "text-blue-600" : "text-gray-400"
+              }`
+            }
+          >
+            <Settings size={20} />
+            Categories
           </NavLink>
         </div>
       </nav>

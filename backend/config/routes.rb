@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :categories, only: [:index, :show, :create, :update, :destroy]
+      resources :users, only: [:index]
 
       resources :groups do
         member do

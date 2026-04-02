@@ -4,8 +4,13 @@ import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
 import { GroupsPage } from "./pages/GroupsPage";
+import { GroupFormPage } from "./pages/GroupFormPage";
 import { ProvidersPage } from "./pages/ProvidersPage";
+import { ProviderFormPage } from "./pages/ProviderFormPage";
+import { MembersPage } from "./pages/MembersPage";
+import { CategoriesPage } from "./pages/CategoriesPage";
 
 const queryClient = new QueryClient();
 
@@ -15,9 +20,11 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            {/* Public */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-            {/* All authenticated pages share the Layout (header + nav) */}
+            {/* Authenticated — all wrapped in Layout (header + nav) */}
             <Route
               element={
                 <ProtectedRoute>
@@ -26,11 +33,26 @@ export default function App() {
               }
             >
               <Route path="/groups" element={<GroupsPage />} />
+              <Route path="/groups/new" element={<GroupFormPage />} />
+              <Route path="/groups/:id/edit" element={<GroupFormPage />} />
               <Route
                 path="/groups/:groupId/providers"
                 element={<ProvidersPage />}
               />
-              {/* Default redirect */}
+              <Route
+                path="/groups/:groupId/providers/new"
+                element={<ProviderFormPage />}
+              />
+              <Route
+                path="/groups/:groupId/providers/:providerId/edit"
+                element={<ProviderFormPage />}
+              />
+              <Route
+                path="/groups/:groupId/members"
+                element={<MembersPage />}
+              />
+              <Route path="/categories" element={<CategoriesPage />} />
+
               <Route path="/" element={<Navigate to="/groups" replace />} />
             </Route>
 
