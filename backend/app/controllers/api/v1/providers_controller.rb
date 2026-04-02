@@ -3,13 +3,16 @@
 module Api
   module V1
     class ProvidersController < BaseController
+      before_action :set_group
       before_action :set_provider, only: [:show, :update, :destroy, :archive, :unarchive]
 
       def index
-        providers = Provider.search(params[:q])
-                           .then { |s| params[:archived] == "true" ? s.archived : s.active }
-                           .then { |s| params[:category].present? ? s.where(category: params[:category]) : s }
-                           .order(:name)
+        providers = policy_scope(Provider)
+                      .where(group: @group)
+                      .search(params[:q])
+                      .then { |s| params[:archived] == "true" ? s.archived : s.active }
+                      .then { |s| params[:category].present? ? s.where(category: params[:category]) : s }
+                      .order(:name)
 
         render json: { data: providers.as_json(provider_json_options) }
       end
@@ -19,7 +22,8 @@ module Api
       end
 
       def create
-        provider = Provider.new(provider_params)
+        provider = @group.providers.new(provider_params)
+        authorize provider
         if provider.save
           render json: { data: provider.as_json(provider_json_options) }, status: :created
         else
@@ -52,8 +56,13 @@ module Api
 
       private
 
+      def set_group
+        @group = policy_scope(Group).find(params[:group_id])
+      end
+
       def set_provider
-        @provider = Provider.find(params[:id])
+        @provider = @group.providers.find(params[:id])
+        authorize @provider
       end
 
       def provider_params

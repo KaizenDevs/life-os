@@ -10,12 +10,28 @@ class GroupPolicy < ApplicationPolicy
   def create? = user.super_admin?
 
   def update?
-    user.super_admin? && record.created_by_id == user.id
+    super_admin_creator? || record.admin?(user)
+  end
+
+  def archive?
+    super_admin_creator? || record.admin?(user)
+  end
+
+  def unarchive?
+    super_admin_creator?
   end
 
   def destroy?
+    super_admin_creator?
+  end
+
+  private
+
+  def super_admin_creator?
     user.super_admin? && record.created_by_id == user.id
   end
+
+  public
 
   class Scope < ApplicationPolicy::Scope
     def resolve

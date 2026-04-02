@@ -10,11 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_24_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_02_020435) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "groups", force: :cascade do |t|
+    t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
     t.integer "group_type", default: 0, null: false
@@ -44,12 +45,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_24_000003) do
     t.string "category", null: false
     t.datetime "created_at", null: false
     t.string "email"
+    t.bigint "group_id", null: false
     t.string "name", null: false
     t.text "notes"
     t.string "phone"
     t.datetime "updated_at", null: false
     t.index ["archived_at"], name: "index_providers_on_archived_at", where: "(archived_at IS NULL)"
     t.index ["category"], name: "index_providers_on_category"
+    t.index ["group_id"], name: "index_providers_on_group_id"
     t.index ["name"], name: "index_providers_on_name"
   end
 
@@ -73,4 +76,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_24_000003) do
   add_foreign_key "memberships", "groups"
   add_foreign_key "memberships", "users"
   add_foreign_key "memberships", "users", column: "invited_by_id"
+  add_foreign_key "providers", "groups"
 end

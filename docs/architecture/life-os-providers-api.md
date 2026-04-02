@@ -1,15 +1,49 @@
-# Life OS – Architecture (Providers API)
+# Life OS – Architecture
 
-This document describes the architecture of the life-os backend: an API-only Rails app for day-to-day records, starting with a **providers** module and JWT authentication.
+This document is the **source of truth** for the life-os backend: an API-only Rails app for day-to-day records.
 
 ## High-level architecture
 
 - **Backend**: Rails 8.1 API-only app in `backend/`, Ruby 4.0.x.
 - **Database**: PostgreSQL in its own Docker container when using Docker; otherwise local Postgres.
 - **Authentication**: Devise + devise-jwt (stateless JWT, revocation via JTI).
-- **Authorization**: All authenticated users can manage providers (no roles yet).
+- **Authorization**: Pundit — role-based, two-tier (system role + group membership role).
 - **Testing**: RSpec, FactoryBot, Shoulda Matchers.
 - **CI**: GitHub Actions (root `.github/workflows/ci.yml`) runs backend tests with a Postgres service.
+
+## User roles
+
+Roles operate at two levels: **system-wide** and **group-level**.
+
+### System roles (`users.system_role`)
+
+| Role | Description |
+|------|-------------|
+| `super_admin` | Full platform access. Can create and manage all groups and users. |
+| `user` | Default role. Access is determined by group memberships. |
+
+### Group membership roles (`memberships.role`)
+
+A user can belong to multiple groups, each with an independent role.
+
+| Role | Description |
+|------|-------------|
+| `admin` | Manages the group: invites/removes members, updates group settings. At least one admin per group. |
+| `member` | Full access to group resources (read and write). |
+| `viewer` | Read-only access to group resources. |
+
+### How they interact
+
+- A `super_admin` can do anything within groups they created. They do not have visibility into other users' groups — this preserves user privacy.
+- A `user` with no group memberships has no access to any group resources.
+- A `user` can be `admin`, `member`, or `viewer` in different groups simultaneously.
+- Group membership is invite-based (`invited_by`, `accepted_at` on the membership record). Pending invitations are visible in the membership list; the invited user accepts via the UI.
+- `viewer` members can only read resources within their group — no create, update, or delete.
+- A group must always have at least one `admin`. Removing or demoting the last admin is forbidden at the model level.
+
+### Scoping principle
+
+Every API response is scoped to the current user. Users never see data outside the groups they belong to. This applies to all resources: groups, memberships, and providers.
 
 ## Auth
 
@@ -20,17 +54,51 @@ This document describes the architecture of the life-os backend: an API-only Rai
 
 ## API (all under `/api/v1`, all require `Authorization: Bearer <token>`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /api/v1/providers | List (optional: `q`, `category`, `archived=true`) |
-| GET | /api/v1/providers/:id | Show |
-| POST | /api/v1/providers | Create |
-| PATCH/PUT | /api/v1/providers/:id | Update |
-| DELETE | /api/v1/providers/:id | Destroy |
-| POST | /api/v1/providers/:id/archive | Soft-archive |
-| POST | /api/v1/providers/:id/unarchive | Restore |
+### Providers
 
-Provider attributes: `name`, `category` (plumber, mechanic, curtains, electrician, painter, other), `phone`, `email`, `address`, `notes`, `archived_at`.
+Providers belong to a group and are always accessed in that context. Users only see providers from groups they belong to.
+
+| Method | Path | Description | Who can |
+|--------|------|-------------|---------|
+| GET | /api/v1/groups/:group_id/providers | List (optional: `q`, `category`, `archived=true`) | `admin`, `member`, `viewer` |
+| GET | /api/v1/groups/:group_id/providers/:id | Show | `admin`, `member`, `viewer` |
+| POST | /api/v1/groups/:group_id/providers | Create | `admin`, `member` |
+| PATCH/PUT | /api/v1/groups/:group_id/providers/:id | Update | `admin`, `member` |
+| POST | /api/v1/groups/:group_id/providers/:id/archive | Soft-delete | `admin`, `member` |
+| POST | /api/v1/groups/:group_id/providers/:id/unarchive | Restore | `admin`, `member` |
+| DELETE | /api/v1/groups/:group_id/providers/:id | Hard delete | `admin` only |
+
+Provider attributes: `name` (required), `category` (required — plumber, mechanic, curtains, electrician, painter, other), `phone`, `email`, `address`, `notes`, `archived_at`, `group_id`.
+
+### Groups
+
+Results are always scoped: `super_admin` sees only groups they created; regular users see only groups they are a member of.
+
+| Method | Path | Description | Who can |
+|--------|------|-------------|---------|
+| GET | /api/v1/groups | List — returns only groups the current user belongs to | Any authenticated user |
+| GET | /api/v1/groups/:id | Show | `super_admin` (creator) or any group member (`admin`, `member`, `viewer`) |
+| POST | /api/v1/groups | Create | `super_admin` only |
+| PATCH/PUT | /api/v1/groups/:id | Update | `super_admin` (creator) or group `admin` |
+| POST | /api/v1/groups/:id/archive | Soft-delete | `super_admin` (creator) or group `admin` |
+| POST | /api/v1/groups/:id/unarchive | Restore | `super_admin` (creator) only |
+| DELETE | /api/v1/groups/:id | Hard delete | `super_admin` (creator) only |
+
+Group attributes: `name`, `group_type` (household, company), `archived_at`.
+
+### Memberships
+
+Results are scoped to groups the current user belongs to. A user cannot discover members of a group they are not part of.
+
+| Method | Path | Description | Who can |
+|--------|------|-------------|---------|
+| GET | /api/v1/groups/:group_id/memberships | List members (scoped) | Any group member (`admin`, `member`, `viewer`) |
+| POST | /api/v1/groups/:group_id/memberships | Invite a user | `super_admin` (creator) or group `admin` |
+| PATCH/PUT | /api/v1/groups/:group_id/memberships/:id | Update role | `super_admin` (creator) or group `admin` |
+| DELETE | /api/v1/groups/:group_id/memberships/:id | Remove a member | `super_admin` (creator) or group `admin` |
+| POST | /api/v1/groups/:group_id/memberships/:id/accept | Accept an invitation | The invited user only |
+
+Membership attributes: `role` (admin, member, viewer), `accepted_at`, `invited_by_id`.
 
 ## Docker
 

@@ -3,7 +3,7 @@
 module Api
   module V1
     class GroupsController < BaseController
-      before_action :set_group, only: [:show, :update, :destroy]
+      before_action :set_group, only: [:show, :update, :destroy, :archive, :unarchive]
 
       def index
         groups = policy_scope(Group)
@@ -40,6 +40,18 @@ module Api
         head :no_content
       end
 
+      def archive
+        authorize @group
+        @group.archive!
+        render json: { data: @group.as_json(group_json_options) }
+      end
+
+      def unarchive
+        authorize @group
+        @group.unarchive!
+        render json: { data: @group.as_json(group_json_options) }
+      end
+
       private
 
       def set_group
@@ -52,7 +64,7 @@ module Api
 
       def group_json_options
         {
-          only: %i[id name group_type created_at updated_at],
+          only: %i[id name group_type archived_at created_at updated_at],
           include: { created_by: { only: %i[id email] } }
         }
       end

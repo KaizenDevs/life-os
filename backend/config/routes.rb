@@ -5,14 +5,19 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :providers do
+      resources :groups do
         member do
           post :archive
           post :unarchive
         end
-      end
 
-      resources :groups do
+        resources :providers do
+          member do
+            post :archive
+            post :unarchive
+          end
+        end
+
         resources :memberships, only: [:index, :create, :update, :destroy] do
           member do
             post :accept
