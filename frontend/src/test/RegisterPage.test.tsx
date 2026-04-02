@@ -1,18 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, mock, beforeEach } from "bun:test";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+
+const mockRegister = mock<(email: string, password: string) => Promise<string>>();
+
+mock.module("../api/auth", () => ({
+  register: mockRegister,
+}));
+
 import { RegisterPage } from "../pages/RegisterPage";
 import { renderWithProviders } from "./helpers";
 
-vi.mock("../api/auth", () => ({
-  register: vi.fn(),
-}));
-
-import { register } from "../api/auth";
-
 describe("RegisterPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockRegister.mockClear();
   });
 
   it("renders all fields", () => {
@@ -35,14 +36,12 @@ describe("RegisterPage", () => {
       screen.getByRole("button", { name: /create account/i })
     );
 
-    expect(
-      screen.getByText(/passwords do not match/i)
-    ).toBeInTheDocument();
-    expect(register).not.toHaveBeenCalled();
+    expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
+    expect(mockRegister).not.toHaveBeenCalled();
   });
 
   it("calls register when passwords match", async () => {
-    vi.mocked(register).mockResolvedValueOnce("new-token");
+    mockRegister.mockResolvedValueOnce("new-token");
     renderWithProviders(<RegisterPage />, { authToken: null });
 
     await userEvent.type(screen.getByPlaceholderText("Email"), "u@test.com");
@@ -56,12 +55,12 @@ describe("RegisterPage", () => {
     );
 
     await waitFor(() =>
-      expect(register).toHaveBeenCalledWith("u@test.com", "secret")
+      expect(mockRegister).toHaveBeenCalledWith("u@test.com", "secret")
     );
   });
 
   it("shows error on registration failure", async () => {
-    vi.mocked(register).mockRejectedValueOnce(new Error("Taken"));
+    mockRegister.mockRejectedValueOnce(new Error("Taken"));
     renderWithProviders(<RegisterPage />, { authToken: null });
 
     await userEvent.type(screen.getByPlaceholderText("Email"), "u@test.com");
@@ -75,9 +74,7 @@ describe("RegisterPage", () => {
     );
 
     await waitFor(() =>
-      expect(
-        screen.getByText(/registration failed/i)
-      ).toBeInTheDocument()
+      expect(screen.getByText(/registration failed/i)).toBeInTheDocument()
     );
   });
 });
