@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, Plus, Archive } from "lucide-react";
+import { ChevronRight, Plus, Archive, Pencil } from "lucide-react";
 import { useGroups } from "../hooks/useGroups";
 import { archiveGroup } from "../api/groups";
 
@@ -48,6 +48,15 @@ export function GroupsPage() {
                 </p>
               </div>
               <ChevronRight size={18} className="text-gray-300" />
+            </button>
+
+            {/* Edit */}
+            <button
+              onClick={() => navigate(`/groups/${group.id}/edit`)}
+              className="p-2 text-gray-300 hover:text-blue-500 transition-colors"
+              title="Edit group"
+            >
+              <Pencil size={16} />
             </button>
 
             {/* Archive */}
