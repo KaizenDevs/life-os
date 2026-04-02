@@ -3,6 +3,24 @@
 require "rails_helper"
 
 RSpec.describe "Authentication", type: :request do
+  describe "POST /users (registration)" do
+    it "returns 201 and Authorization header on successful registration" do
+      post user_registration_path,
+        params: { user: { email: "new@example.com", password: "password123", password_confirmation: "password123" } },
+        as: :json
+      expect(response).to have_http_status(:created)
+      expect(response.headers["Authorization"]).to start_with("Bearer ")
+    end
+
+    it "returns 422 with invalid params" do
+      post user_registration_path,
+        params: { user: { email: "bad", password: "password123", password_confirmation: "password123" } },
+        as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.headers["Authorization"]).to be_nil
+    end
+  end
+
   describe "POST /users/sign_in" do
     let(:user) { create(:user, password: "password123", password_confirmation: "password123") }
 
