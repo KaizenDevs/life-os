@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { HomePage } from "./pages/HomePage";
 import { GroupsPage } from "./pages/GroupsPage";
 import { GroupFormPage } from "./pages/GroupFormPage";
 import { ProvidersPage } from "./pages/ProvidersPage";
@@ -32,28 +33,15 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
+              <Route path="/" element={<HomePage />} />
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/groups/new" element={<GroupFormPage />} />
               <Route path="/groups/:id/edit" element={<GroupFormPage />} />
-              <Route
-                path="/groups/:groupId/providers"
-                element={<ProvidersPage />}
-              />
-              <Route
-                path="/groups/:groupId/providers/new"
-                element={<ProviderFormPage />}
-              />
-              <Route
-                path="/groups/:groupId/providers/:providerId/edit"
-                element={<ProviderFormPage />}
-              />
-              <Route
-                path="/groups/:groupId/members"
-                element={<MembersPage />}
-              />
+              <Route path="/groups/:groupId/providers" element={<ProvidersPage />} />
+              <Route path="/groups/:groupId/providers/new" element={<ProviderFormPage />} />
+              <Route path="/groups/:groupId/providers/:providerId/edit" element={<ProviderFormPage />} />
+              <Route path="/groups/:groupId/members" element={<MembersPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
-
-              <Route path="/" element={<Navigate to="/groups" replace />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -5,3 +5,8 @@
 %w[plumber mechanic curtains electrician painter other].each do |name|
   Category.find_or_create_by!(name: name)
 end
+
+LifeOsModule.find_or_create_by!(key: "contacts_book") do |m|
+  m.name = "Contacts Book"
+  m.enabled = true
+end

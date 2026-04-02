@@ -25,6 +25,19 @@ export interface Provider {
   updated_at: string;
 }
 
+export interface LifeOsModule {
+  id: number;
+  name: string;
+  key: string;
+  enabled: boolean;
+}
+
+export interface GroupModule {
+  id: number;
+  enabled: boolean;
+  module: LifeOsModule;
+}
+
 export interface Membership {
   id: number;
   role: string;

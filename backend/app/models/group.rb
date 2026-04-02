@@ -7,9 +7,19 @@ class Group < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :users, through: :memberships
   has_many :providers, dependent: :destroy
+  has_many :group_modules, dependent: :destroy
+  has_many :life_os_modules, through: :group_modules
+
+  after_create :provision_modules
 
   validates :name, presence: true
   validates :group_type, presence: true
+
+  def provision_modules
+    LifeOsModule.where(enabled: true).find_each do |mod|
+      group_modules.find_or_create_by!(life_os_module: mod)
+    end
+  end
 
   def admin?(user)
     memberships.exists?(user: user, role: :admin)

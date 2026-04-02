@@ -3,7 +3,7 @@
 // Desktop: sticky header + nav links inline
 
 import { NavLink, Outlet } from "react-router-dom";
-import { Building2, Settings } from "lucide-react";
+import { Home, Building2, Settings } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export function Layout() {
@@ -14,9 +14,18 @@ export function Layout() {
       {/* Header */}
       <header className="bg-white border-b px-4 py-3 flex justify-between items-center sticky top-0 z-10">
         <div className="flex items-center gap-6">
-          <span className="font-bold text-lg">Life OS</span>
+          <NavLink to="/" className="font-bold text-lg text-gray-900">Life OS</NavLink>
           {/* Desktop nav links */}
           <nav className="hidden md:flex gap-4">
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) =>
+                `text-sm font-medium ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-800"}`
+              }
+            >
+              Home
+            </NavLink>
             <NavLink
               to="/groups"
               className={({ isActive }) =>
@@ -51,6 +60,18 @@ export function Layout() {
       {/* Bottom nav — mobile only */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden">
         <div className="flex">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              `flex-1 flex flex-col items-center py-2 gap-1 text-xs ${
+                isActive ? "text-blue-600" : "text-gray-400"
+              }`
+            }
+          >
+            <Home size={20} />
+            Home
+          </NavLink>
           <NavLink
             to="/groups"
             className={({ isActive }) =>
