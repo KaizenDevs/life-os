@@ -7,7 +7,9 @@ class GroupPolicy < ApplicationPolicy
     user.super_admin? || record.member?(user)
   end
 
-  def create? = user.super_admin?
+  def create?
+    user.super_admin? || user.created_groups.count < 3
+  end
 
   def update?
     super_admin_creator? || record.admin?(user)

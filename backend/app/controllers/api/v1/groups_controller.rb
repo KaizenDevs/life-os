@@ -19,6 +19,7 @@ module Api
         group = Group.new(group_params.merge(created_by: current_user))
         authorize group
         if group.save
+          group.memberships.create!(user: current_user, role: :admin, accepted_at: Time.current)
           render json: { data: group.as_json(group_json_options) }, status: :created
         else
           render json: { errors: group.errors.full_messages }, status: :unprocessable_entity

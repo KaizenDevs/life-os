@@ -39,9 +39,22 @@ RSpec.describe "Api::V1::Groups", type: :request do
       expect(response.parsed_body["data"]["name"]).to eq("My House")
     end
 
-    it "returns 403 for regular users" do
+    it "allows regular user to create a group (auto-assigned as admin)" do
       post api_v1_groups_path,
         params: { group: { name: "My House", group_type: "household" } },
+        headers: auth_headers(regular_user),
+        as: :json
+      expect(response).to have_http_status(:created)
+      group = Group.find(response.parsed_body["data"]["id"])
+      expect(group.memberships.find_by(user: regular_user).role).to eq("admin")
+    end
+
+    it "returns 403 when regular user has reached the 3-group limit" do
+      create_list(:group, 3, created_by: regular_user).each do |g|
+        create(:membership, :admin, group: g, user: regular_user)
+      end
+      post api_v1_groups_path,
+        params: { group: { name: "One Too Many", group_type: "household" } },
         headers: auth_headers(regular_user),
         as: :json
       expect(response).to have_http_status(:forbidden)

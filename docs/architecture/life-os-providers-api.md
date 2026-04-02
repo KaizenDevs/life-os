@@ -35,6 +35,7 @@ A user can belong to multiple groups, each with an independent role.
 ### How they interact
 
 - A `super_admin` can do anything within groups they created. They do not have visibility into other users' groups — this preserves user privacy.
+- A `user` can create up to 3 groups. On creation, they are automatically added as group `admin`.
 - A `user` with no group memberships has no access to any group resources.
 - A `user` can be `admin`, `member`, or `viewer` in different groups simultaneously.
 - Group membership is invite-based (`invited_by`, `accepted_at` on the membership record). Pending invitations are visible in the membership list; the invited user accepts via the UI.
@@ -72,13 +73,13 @@ Provider attributes: `name` (required), `category` (required — plumber, mechan
 
 ### Groups
 
-Results are always scoped: `super_admin` sees only groups they created; regular users see only groups they are a member of.
+Results are always scoped: `super_admin` sees only groups they created; regular users see only groups they are a member of (including ones they created).
 
 | Method | Path | Description | Who can |
 |--------|------|-------------|---------|
 | GET | /api/v1/groups | List — returns only groups the current user belongs to | Any authenticated user |
 | GET | /api/v1/groups/:id | Show | `super_admin` (creator) or any group member (`admin`, `member`, `viewer`) |
-| POST | /api/v1/groups | Create | `super_admin` only |
+| POST | /api/v1/groups | Create | `super_admin` (unlimited) or any `user` (max 3 groups) |
 | PATCH/PUT | /api/v1/groups/:id | Update | `super_admin` (creator) or group `admin` |
 | POST | /api/v1/groups/:id/archive | Soft-delete | `super_admin` (creator) or group `admin` |
 | POST | /api/v1/groups/:id/unarchive | Restore | `super_admin` (creator) only |
