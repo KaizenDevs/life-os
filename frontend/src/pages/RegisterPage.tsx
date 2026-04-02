@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { register } from "../api/auth";
+import { register, AuthError } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 
 export function RegisterPage() {
@@ -25,8 +25,12 @@ export function RegisterPage() {
       const token = await register(email, password);
       signIn(token);
       navigate("/");
-    } catch {
-      setError("Registration failed. Try a different email.");
+    } catch (err) {
+      if (err instanceof AuthError && err.status === 422) {
+        setError("Registration failed. Try a different email.");
+      } else {
+        setError("Cannot reach the server. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }

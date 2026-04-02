@@ -1,11 +1,13 @@
 import { describe, it, expect, mock, beforeEach } from "bun:test";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { AuthError } from "../api/auth";
 
 const mockLogin = mock<(email: string, password: string) => Promise<string>>();
 
 mock.module("../api/auth", () => ({
   login: mockLogin,
+  AuthError,
 }));
 
 import { LoginPage } from "../pages/LoginPage";
@@ -35,8 +37,8 @@ describe("LoginPage", () => {
     );
   });
 
-  it("shows error message on failed login", async () => {
-    mockLogin.mockRejectedValueOnce(new Error("Invalid"));
+  it("shows 'invalid credentials' on 401", async () => {
+    mockLogin.mockRejectedValueOnce(new AuthError("Invalid email or password", 401));
     renderWithProviders(<LoginPage />, { authToken: null });
 
     await userEvent.type(screen.getByPlaceholderText("Email"), "bad@test.com");
@@ -44,9 +46,20 @@ describe("LoginPage", () => {
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() =>
-      expect(
-        screen.getByText(/invalid email or password/i)
-      ).toBeInTheDocument()
+      expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument()
+    );
+  });
+
+  it("shows 'cannot reach server' on network/server error", async () => {
+    mockLogin.mockRejectedValueOnce(new AuthError("Bad gateway", 502));
+    renderWithProviders(<LoginPage />, { authToken: null });
+
+    await userEvent.type(screen.getByPlaceholderText("Email"), "u@test.com");
+    await userEvent.type(screen.getByPlaceholderText("Password"), "pass");
+    await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/cannot reach the server/i)).toBeInTheDocument()
     );
   });
 

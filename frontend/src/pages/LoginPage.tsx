@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../api/auth";
+import { login, AuthError } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 
 export function LoginPage() {
@@ -21,8 +21,12 @@ export function LoginPage() {
       const token = await login(email, password);
       signIn(token);
       navigate("/");
-    } catch {
-      setError("Invalid email or password");
+    } catch (err) {
+      if (err instanceof AuthError && err.status === 401) {
+        setError("Invalid email or password");
+      } else {
+        setError("Cannot reach the server. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
