@@ -23,6 +23,7 @@ export default defineConfig({
     }),
   ],
   server: {
+    host: true,
     proxy: {
       // forward API and auth calls to the Rails backend
       "/api": "http://localhost:3000",

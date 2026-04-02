@@ -1,0 +1,9 @@
+{
+  "name": "life-os",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --cwd frontend dev",
+    "test": "bun test",
+    "build": "bun run --cwd frontend build"
+  }
+}
