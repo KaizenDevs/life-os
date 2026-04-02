@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_02_165959) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_02_200002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,6 +19,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_02_165959) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_categories_on_name", unique: true
+  end
+
+  create_table "group_modules", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: true, null: false
+    t.bigint "group_id", null: false
+    t.bigint "module_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["group_id", "module_id"], name: "index_group_modules_on_group_id_and_module_id", unique: true
+    t.index ["group_id"], name: "index_group_modules_on_group_id"
+    t.index ["module_id"], name: "index_group_modules_on_module_id"
   end
 
   create_table "groups", force: :cascade do |t|
@@ -44,6 +55,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_02_165959) do
     t.index ["invited_by_id"], name: "index_memberships_on_invited_by_id"
     t.index ["user_id", "group_id"], name: "index_memberships_on_user_id_and_group_id", unique: true
     t.index ["user_id"], name: "index_memberships_on_user_id"
+  end
+
+  create_table "modules", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: true, null: false
+    t.string "key", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_modules_on_key", unique: true
   end
 
   create_table "providers", force: :cascade do |t|
@@ -79,6 +99,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_02_165959) do
     t.index ["system_role"], name: "index_users_on_system_role"
   end
 
+  add_foreign_key "group_modules", "groups"
+  add_foreign_key "group_modules", "modules"
   add_foreign_key "groups", "users", column: "created_by_id"
   add_foreign_key "memberships", "groups"
   add_foreign_key "memberships", "users"
