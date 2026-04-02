@@ -99,7 +99,7 @@ RSpec.describe "Api::V1::Providers", type: :request do
         params: { provider: { name: "", category: "plumber" } },
         headers: auth_headers(member_user),
         as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

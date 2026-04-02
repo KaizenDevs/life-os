@@ -8,6 +8,6 @@ class JwtDecodeErrorHandler
   def call(env)
     @app.call(env)
   rescue JWT::DecodeError
-    [ 401, { "Content-Type" => "application/json" }, [ '{"error":"Invalid or missing token"}' ] ]
+    [ 401, { "Content-Type" => "application/json" }, [ { error: I18n.t("errors.authentication.invalid_token") }.to_json ] ]
   end
 end

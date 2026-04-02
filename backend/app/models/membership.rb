@@ -26,7 +26,7 @@ class Membership < ApplicationRecord
   private
 
   def group_must_retain_an_admin
-    return unless admin_was = role_was == "admin"
+    return unless role_was == "admin"
     remaining_admins = group.memberships.where(role: :admin).where.not(id: id).count
     errors.add(:base, "group must have at least one admin") if remaining_admins == 0
   end

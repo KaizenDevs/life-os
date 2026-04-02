@@ -27,14 +27,6 @@ class GroupPolicy < ApplicationPolicy
     super_admin_creator?
   end
 
-  private
-
-  def super_admin_creator?
-    user.super_admin? && record.created_by_id == user.id
-  end
-
-  public
-
   class Scope < ApplicationPolicy::Scope
     def resolve
       if user.super_admin?
@@ -43,5 +35,11 @@ class GroupPolicy < ApplicationPolicy
         scope.joins(:memberships).where(memberships: { user_id: user.id })
       end
     end
+  end
+
+  private
+
+  def super_admin_creator?
+    user.super_admin? && record.created_by_id == user.id
   end
 end

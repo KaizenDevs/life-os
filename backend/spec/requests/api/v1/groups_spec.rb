@@ -65,7 +65,7 @@ RSpec.describe "Api::V1::Groups", type: :request do
         params: { group: { name: "", group_type: "household" } },
         headers: auth_headers(super_admin),
         as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

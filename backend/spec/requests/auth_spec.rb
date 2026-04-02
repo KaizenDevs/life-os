@@ -16,7 +16,7 @@ RSpec.describe "Authentication", type: :request do
       post user_registration_path,
         params: { user: { email: "bad", password: "password123", password_confirmation: "password123" } },
         as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.headers["Authorization"]).to be_nil
     end
   end
