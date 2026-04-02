@@ -3,19 +3,19 @@
 FactoryBot.define do
   factory :provider do
     sequence(:name) { |n| "Provider #{n}" }
-    category { "plumber" }
     phone { "+1 555 123 4567" }
     email { "contact@example.com" }
     address { "123 Main St" }
     notes { nil }
     association :group
+    association :category
 
     trait :mechanic do
-      category { "mechanic" }
+      category { Category.find_or_create_by!(name: "mechanic") }
     end
 
     trait :curtains do
-      category { "curtains" }
+      category { Category.find_or_create_by!(name: "curtains") }
     end
 
     trait :archived do

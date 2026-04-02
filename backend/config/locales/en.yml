@@ -32,3 +32,5 @@ en:
     authentication:
       invalid_token: "Invalid or missing token"
       unauthorized: "Not authorized"
+    categories:
+      has_providers: "Cannot delete a category that has providers assigned to it"

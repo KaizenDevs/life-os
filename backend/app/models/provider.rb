@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
 class Provider < ApplicationRecord
-  CATEGORIES = %w[plumber mechanic curtains electrician painter other].freeze
-
   belongs_to :group
+  belongs_to :category
 
   validates :name, presence: true
-  validates :category, presence: true, inclusion: { in: CATEGORIES }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
 
   scope :active, -> { where(archived_at: nil) }

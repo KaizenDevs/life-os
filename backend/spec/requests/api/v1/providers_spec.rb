@@ -10,10 +10,11 @@ RSpec.describe "Api::V1::Providers", type: :request do
   let(:viewer_user)  { create(:user).tap { |u| create(:membership, :viewer, group: group, user: u) } }
   let(:outsider)     { create(:user) }
 
-  let(:provider) { create(:provider, group: group) }
+  let(:default_category) { create(:category, name: "plumber") }
+  let(:provider) { create(:provider, group: group, category: default_category) }
 
   describe "GET /api/v1/groups/:group_id/providers" do
-    before { create(:provider, group: group, name: "Active Provider") }
+    before { create(:provider, group: group, name: "Active Provider", category: default_category) }
 
     it "returns active providers for admin" do
       get api_v1_group_providers_path(group), headers: auth_headers(admin_user), as: :json
@@ -50,7 +51,7 @@ RSpec.describe "Api::V1::Providers", type: :request do
     it "filters by category" do
       create(:provider, :mechanic, group: group)
       get "#{api_v1_group_providers_path(group)}?category=mechanic", headers: auth_headers(member_user), as: :json
-      expect(response.parsed_body["data"].all? { |p| p["category"] == "mechanic" }).to be true
+      expect(response.parsed_body["data"].all? { |p| p["category"]["name"] == "mechanic" }).to be true
     end
 
     it "returns archived providers with archived=true" do
@@ -76,7 +77,7 @@ RSpec.describe "Api::V1::Providers", type: :request do
   end
 
   describe "POST /api/v1/groups/:group_id/providers" do
-    let(:valid_params) { { provider: { name: "New Provider", category: "plumber" } } }
+    let(:valid_params) { { provider: { name: "New Provider", category_id: default_category.id } } }
 
     it "allows admin to create a provider" do
       post api_v1_group_providers_path(group), params: valid_params, headers: auth_headers(admin_user), as: :json
@@ -96,7 +97,7 @@ RSpec.describe "Api::V1::Providers", type: :request do
 
     it "returns 422 with invalid params" do
       post api_v1_group_providers_path(group),
-        params: { provider: { name: "", category: "plumber" } },
+        params: { provider: { name: "", category_id: default_category.id } },
         headers: auth_headers(member_user),
         as: :json
       expect(response).to have_http_status(:unprocessable_content)

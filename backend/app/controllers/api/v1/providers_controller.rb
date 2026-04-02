@@ -11,7 +11,7 @@ module Api
                       .where(group: @group)
                       .search(params[:q])
                       .then { |s| params[:archived] == "true" ? s.archived : s.active }
-                      .then { |s| params[:category].present? ? s.where(category: params[:category]) : s }
+                      .then { |s| params[:category].present? ? s.joins(:category).where(categories: { name: params[:category] }) : s }
                       .order(:name)
 
         render json: { data: providers.as_json(provider_json_options) }
@@ -66,11 +66,12 @@ module Api
       end
 
       def provider_params
-        params.require(:provider).permit(:name, :category, :phone, :email, :address, :notes)
+        params.require(:provider).permit(:name, :category_id, :phone, :email, :address, :notes)
       end
 
       def provider_json_options
-        { only: %i[id name category phone email address notes archived_at created_at updated_at] }
+        { only: %i[id name phone email address notes archived_at created_at updated_at],
+          include: { category: { only: %i[id name] } } }
       end
     end
   end
