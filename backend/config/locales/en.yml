@@ -28,4 +28,7 @@
 #       enabled: "ON"
 
 en:
-  hello: "Hello world"
+  errors:
+    authentication:
+      invalid_token: "Invalid or missing token"
+      unauthorized: "Not authorized"
