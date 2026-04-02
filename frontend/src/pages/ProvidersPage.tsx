@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Phone, Mail, MapPin, Plus, Pencil, Archive, ArchiveRestore, Users } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Plus, Pencil, Archive, ArchiveRestore, Users, Search } from "lucide-react";
 import { useGroups } from "../hooks/useGroups";
 import { useProviders } from "../hooks/useProviders";
 import { archiveProvider, unarchiveProvider } from "../api/providers";
@@ -17,6 +17,19 @@ export function ProvidersPage() {
   const gId = Number(groupId);
 
   const [tab, setTab] = useState<Tab>("active");
+  const [query, setQuery] = useState("");
+  const [letter, setLetter] = useState<string | null>(null);
+  const letterBarRef = useRef<HTMLDivElement>(null);
+
+  const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+  function handleLetterSlide(e: React.TouchEvent) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const l = el?.getAttribute("data-letter");
+    if (l) { setLetter(l); setQuery(""); }
+  }
 
   const { data: groupsData } = useGroups();
   const { data, isLoading } = useProviders(gId);
@@ -110,7 +123,9 @@ export function ProvidersPage() {
   }
 
   const loading = tab === "active" ? isLoading : isLoadingArchived;
-  const providers = tab === "active" ? active : archived;
+  const providers = (tab === "active" ? active : archived)
+    .filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
+    .filter((p) => !letter || p.name.toUpperCase().startsWith(letter));
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -159,20 +174,57 @@ export function ProvidersPage() {
         ))}
       </div>
 
-      {/* List */}
-      {loading && <p className="text-gray-400 text-sm">Loading…</p>}
+      <div className="flex gap-3">
+        {/* Search + list */}
+        <div className="flex-1 min-w-0">
+          <div className="relative mb-3">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setLetter(null); }}
+              placeholder="Search providers…"
+              className="w-full border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-      {!loading && providers.length === 0 && (
-        <p className="text-gray-400 text-sm">
-          {tab === "active" ? "No providers yet." : "No archived providers."}
-        </p>
-      )}
+          {loading && <p className="text-gray-400 text-sm">Loading…</p>}
 
-      <ul className="space-y-2">
-        {providers.map((p) => (
-          <ProviderCard key={p.id} provider={p} isArchived={tab === "archived"} />
-        ))}
-      </ul>
+          {!loading && providers.length === 0 && (
+            <p className="text-gray-400 text-sm">
+              {tab === "active" ? "No providers yet." : "No archived providers."}
+            </p>
+          )}
+
+          <ul className="space-y-2">
+            {providers.map((p) => (
+              <ProviderCard key={p.id} provider={p} isArchived={tab === "archived"} />
+            ))}
+          </ul>
+        </div>
+
+        {/* A–Z letter bar */}
+        <div
+          ref={letterBarRef}
+          className="flex flex-col gap-0.5 touch-none select-none"
+          onTouchMove={handleLetterSlide}
+        >
+          {ALPHABET.map((l) => (
+            <button
+              key={l}
+              data-letter={l}
+              onClick={() => { setLetter(letter === l ? null : l); setQuery(""); }}
+              className={`w-6 h-6 rounded text-xs font-medium transition-colors ${
+                letter === l
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

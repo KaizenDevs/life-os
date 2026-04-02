@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, Plus, Archive, Pencil } from "lucide-react";
+import { ChevronRight, Plus, Archive, Pencil, Search } from "lucide-react";
 import { useGroups } from "../hooks/useGroups";
 import { archiveGroup } from "../api/groups";
 
@@ -8,17 +9,20 @@ export function GroupsPage() {
   const { data, isLoading } = useGroups();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [query, setQuery] = useState("");
 
   const archiveMutation = useMutation({
     mutationFn: (id: number) => archiveGroup(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["groups"] }),
   });
 
-  const groups = (data?.data ?? []).filter((g) => !g.archived_at);
+  const groups = (data?.data ?? [])
+    .filter((g) => !g.archived_at)
+    .filter((g) => g.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-3">
         <h2 className="text-lg font-semibold">Groups</h2>
         <button
           onClick={() => navigate("/groups/new")}
@@ -26,6 +30,17 @@ export function GroupsPage() {
         >
           <Plus size={15} /> New group
         </button>
+      </div>
+
+      <div className="relative mb-4">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search groups…"
+          className="w-full border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
       {isLoading && <p className="text-gray-400 text-sm">Loading…</p>}

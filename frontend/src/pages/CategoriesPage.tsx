@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Trash2, Check, X, Plus } from "lucide-react";
+import { Pencil, Trash2, Check, X, Plus, Search } from "lucide-react";
 import { useCategories } from "../hooks/useCategories";
 import {
   createCategory,
@@ -16,8 +16,12 @@ export function CategoriesPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
 
-  const categories = data?.data ?? [];
+  const allCategories = data?.data ?? [];
+  const categories = allCategories.filter((c) =>
+    c.name.toLowerCase().includes(query.toLowerCase())
+  );
 
   const createMutation = useMutation({
     mutationFn: () => createCategory(newName.trim()),
@@ -54,7 +58,18 @@ export function CategoriesPage() {
 
   return (
     <div className="max-w-lg mx-auto p-4">
-      <h2 className="text-lg font-semibold mb-4">Categories</h2>
+      <h2 className="text-lg font-semibold mb-3">Categories</h2>
+
+      <div className="relative mb-4">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search categories…"
+          className="w-full border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
 
       {isLoading && <p className="text-gray-400 text-sm">Loading…</p>}
 
