@@ -34,11 +34,19 @@ export function ProvidersPage() {
     queryFn: () => fetchGroupModules(gId),
   });
   const { data: groupsData } = useGroups();
-  const { data, isLoading } = useProviders(gId);
+
+  // Derive module state before passing to hooks so providers only fetch once access is confirmed
+  const contactsModule = modulesData?.data.find((gm) => gm.module.key === "contacts_book");
+  // Default to false (not true) while modulesData is still loading — prevents a premature fetch
+  const moduleEnabled = modulesData
+    ? !!(contactsModule?.enabled && contactsModule.module.enabled)
+    : false;
+
+  const { data, isLoading } = useProviders(gId, moduleEnabled);
   const { data: archivedData, isLoading: isLoadingArchived } = useQuery({
     queryKey: ["providers", gId, "archived"],
     queryFn: () => apiFetch<{ data: Provider[] }>(`/groups/${gId}/providers?archived=true`),
-    enabled: tab === "archived",
+    enabled: tab === "archived" && moduleEnabled,
   });
 
   const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -73,9 +81,6 @@ export function ProvidersPage() {
     onSuccess: () => { invalidateProviders(); showToast("Provider deleted", "success"); },
     onError: (err: any) => showToast(err.errors?.[0] ?? "Could not delete provider", "error"),
   });
-
-  const contactsModule = modulesData?.data.find((gm) => gm.module.key === "contacts_book");
-  const moduleEnabled = contactsModule ? contactsModule.enabled && contactsModule.module.enabled : true;
 
   if (modulesData && !moduleEnabled) {
     return <Navigate to="/" replace />;
