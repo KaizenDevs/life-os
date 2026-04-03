@@ -48,6 +48,10 @@ export function GroupFormPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!name.trim()) {
+      setError("Name is required");
+      return;
+    }
     setError("");
     mutation.mutate();
   }
@@ -66,7 +70,7 @@ export function GroupFormPage() {
         </h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Name
