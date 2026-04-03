@@ -31,7 +31,7 @@ class ProviderPolicy < ApplicationPolicy
   end
 
   def writable_member?
-    user.super_admin? || membership&.admin? || membership&.member?
+    user.super_admin? || (membership.present? && (membership.admin? || membership.member?))
   end
 
   def group_admin?

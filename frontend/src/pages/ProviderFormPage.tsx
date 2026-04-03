@@ -28,14 +28,20 @@ export function ProviderFormPage() {
   // Prefill when editing
   useEffect(() => {
     if (isEditing) {
-      fetchProvider(Number(groupId), Number(providerId)).then(({ data }) => {
-        setName(data.name);
-        setCategoryId(String(data.category.id));
-        setPhone(data.phone ?? "");
-        setEmail(data.email ?? "");
-        setAddress(data.address ?? "");
-        setNotes(data.notes ?? "");
-      });
+      fetchProvider(Number(groupId), Number(providerId))
+        .then(({ data }) => {
+          setName(data.name);
+          setCategoryId(String(data.category.id));
+          setPhone(data.phone ?? "");
+          setEmail(data.email ?? "");
+          setAddress(data.address ?? "");
+          setNotes(data.notes ?? "");
+        })
+        .catch((err: any) => {
+          const msg = err.errors?.[0] ?? "Failed to load provider";
+          setError(msg);
+          showToast(msg, "error");
+        });
     }
   }, [isEditing, groupId, providerId]);
 

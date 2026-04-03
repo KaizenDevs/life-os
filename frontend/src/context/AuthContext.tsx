@@ -1,7 +1,7 @@
 // Holds the current user's token and exposes signIn / signOut
 // Token lives in sessionStorage — survives page reload, cleared on browser close
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 interface CurrentUser {
@@ -42,6 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem("token");
     setToken(null);
   }
+
+  useEffect(() => {
+    const handler = () => signOut();
+    window.addEventListener("auth:unauthorized", handler);
+    return () => window.removeEventListener("auth:unauthorized", handler);
+  }, []);
 
   return (
     <AuthContext.Provider

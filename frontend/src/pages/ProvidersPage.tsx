@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Phone, Mail, MapPin, Plus, Pencil, Archive, ArchiveRestore, Trash2, Users, Search } from "lucide-react";
 import { useGroups } from "../hooks/useGroups";
@@ -19,23 +19,27 @@ export function ProvidersPage() {
   const queryClient = useQueryClient();
   const gId = Number(groupId);
 
-  const { data: modulesData } = useQuery({
-    queryKey: ["group_modules", gId],
-    queryFn: () => fetchGroupModules(gId),
-  });
-
-  const contactsModule = modulesData?.data.find((gm) => gm.module.key === "contacts_book");
-  const moduleEnabled = contactsModule ? contactsModule.enabled && contactsModule.module.enabled : true;
-
-  if (modulesData && !moduleEnabled) {
-    navigate("/", { replace: true });
-    return null;
-  }
-
+  // All hooks must be declared before any conditional returns
   const [tab, setTab] = useState<Tab>("active");
   const [query, setQuery] = useState("");
   const [letter, setLetter] = useState<string | null>(null);
   const letterBarRef = useRef<HTMLDivElement>(null);
+
+  const { currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.system_role === "super_admin";
+  const { showToast } = useToast();
+
+  const { data: modulesData } = useQuery({
+    queryKey: ["group_modules", gId],
+    queryFn: () => fetchGroupModules(gId),
+  });
+  const { data: groupsData } = useGroups();
+  const { data, isLoading } = useProviders(gId);
+  const { data: archivedData, isLoading: isLoadingArchived } = useQuery({
+    queryKey: ["providers", gId, "archived"],
+    queryFn: () => apiFetch<{ data: Provider[] }>(`/groups/${gId}/providers?archived=true`),
+    enabled: tab === "archived",
+  });
 
   const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -46,23 +50,6 @@ export function ProvidersPage() {
     const l = el?.getAttribute("data-letter");
     if (l) { setLetter(l); setQuery(""); }
   }
-
-  const { currentUser } = useAuth();
-  const isSuperAdmin = currentUser?.system_role === "super_admin";
-  const { showToast } = useToast();
-
-  const { data: groupsData } = useGroups();
-  const { data, isLoading } = useProviders(gId);
-  const { data: archivedData, isLoading: isLoadingArchived } = useQuery({
-    queryKey: ["providers", gId, "archived"],
-    queryFn: () => apiFetch<{ data: Provider[] }>(`/groups/${gId}/providers?archived=true`),
-    enabled: tab === "archived",
-  });
-
-  const group = groupsData?.data.find((g) => g.id === gId);
-  const canWrite = group?.my_role === "admin" || group?.my_role === "member";
-  const active = data?.data ?? [];
-  const archived = archivedData?.data ?? [];
 
   const invalidateProviders = () => {
     queryClient.invalidateQueries({ queryKey: ["providers", gId] });
@@ -86,6 +73,18 @@ export function ProvidersPage() {
     onSuccess: () => { invalidateProviders(); showToast("Provider deleted", "success"); },
     onError: (err: any) => showToast(err.errors?.[0] ?? "Could not delete provider", "error"),
   });
+
+  const contactsModule = modulesData?.data.find((gm) => gm.module.key === "contacts_book");
+  const moduleEnabled = contactsModule ? contactsModule.enabled && contactsModule.module.enabled : true;
+
+  if (modulesData && !moduleEnabled) {
+    return <Navigate to="/" replace />;
+  }
+
+  const group = groupsData?.data.find((g) => g.id === gId);
+  const canWrite = group?.my_role === "admin" || group?.my_role === "member";
+  const active = data?.data ?? [];
+  const archived = archivedData?.data ?? [];
 
   function ProviderCard({
     provider,

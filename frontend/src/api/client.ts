@@ -27,6 +27,9 @@ export async function apiFetch<T>(
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event("auth:unauthorized"));
+    }
     const body = await response.json().catch(() => ({}));
     // Normalize: backend may return { errors: [...] } or { error: "..." }
     const errors: string[] = body.errors ?? (body.error ? [body.error] : []);
