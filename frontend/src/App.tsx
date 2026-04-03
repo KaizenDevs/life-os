@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
@@ -44,8 +45,8 @@ export default function App() {
               <Route path="/groups/:groupId/providers/new" element={<ProviderFormPage />} />
               <Route path="/groups/:groupId/providers/:providerId/edit" element={<ProviderFormPage />} />
               <Route path="/groups/:groupId/members" element={<MembersPage />} />
-              <Route path="/categories" element={<CategoriesPage />} />
-              <Route path="/modules" element={<ModulesPage />} />
+              <Route path="/categories" element={<SuperAdminRoute><CategoriesPage /></SuperAdminRoute>} />
+              <Route path="/modules" element={<SuperAdminRoute><ModulesPage /></SuperAdminRoute>} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -35,15 +35,15 @@ export function Layout() {
             >
               Groups
             </NavLink>
-            <NavLink
-              to="/categories"
-              className={({ isActive }) =>
-                `text-sm font-medium ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-800"}`
-              }
-            >
-              Categories
-            </NavLink>
-            {currentUser?.system_role === "super_admin" && (
+            {currentUser?.system_role === "super_admin" && (<>
+              <NavLink
+                to="/categories"
+                className={({ isActive }) =>
+                  `text-sm font-medium ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-800"}`
+                }
+              >
+                Categories
+              </NavLink>
               <NavLink
                 to="/modules"
                 className={({ isActive }) =>
@@ -52,7 +52,7 @@ export function Layout() {
               >
                 Modules
               </NavLink>
-            )}
+            </>)}
           </nav>
         </div>
         <div className="flex items-center gap-3">
@@ -104,18 +104,18 @@ export function Layout() {
             <Building2 size={20} />
             Groups
           </NavLink>
-          <NavLink
-            to="/categories"
-            className={({ isActive }) =>
-              `flex-1 flex flex-col items-center py-2 gap-1 text-xs ${
-                isActive ? "text-blue-600" : "text-gray-400"
-              }`
-            }
-          >
-            <Settings size={20} />
-            Categories
-          </NavLink>
-          {currentUser?.system_role === "super_admin" && (
+          {currentUser?.system_role === "super_admin" && (<>
+            <NavLink
+              to="/categories"
+              className={({ isActive }) =>
+                `flex-1 flex flex-col items-center py-2 gap-1 text-xs ${
+                  isActive ? "text-blue-600" : "text-gray-400"
+                }`
+              }
+            >
+              <Settings size={20} />
+              Categories
+            </NavLink>
             <NavLink
               to="/modules"
               className={({ isActive }) =>
@@ -127,7 +127,7 @@ export function Layout() {
               <Puzzle size={20} />
               Modules
             </NavLink>
-          )}
+          </>)}
         </div>
       </nav>
     </div>
