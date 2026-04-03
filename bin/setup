@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -e
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+echo -e "${YELLOW}Setting up Life OS...${NC}"
+
+# ── Git hooks ─────────────────────────────────────────────────────────────────
+echo -e "\n${YELLOW}Configuring git hooks...${NC}"
+git -C "$ROOT" config core.hooksPath .githooks
+echo -e "${GREEN}✓ Git hooks configured (.githooks/pre-commit)${NC}"
+
+# ── Frontend dependencies ─────────────────────────────────────────────────────
+echo -e "\n${YELLOW}Installing frontend dependencies...${NC}"
+bun install --cwd "$ROOT/frontend"
+echo -e "${GREEN}✓ Frontend dependencies installed${NC}"
+
+echo -e "\n${GREEN}✓ Setup complete!${NC}"
+echo ""
+echo "  Start the backend:  docker compose up -d"
+echo "  Start the frontend: bun run dev"
+echo "  Run all tests:      bun test && docker compose exec -e RAILS_ENV=test web bundle exec rspec"

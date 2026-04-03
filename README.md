@@ -8,6 +8,18 @@ Daily organizer for day-to-day activities (providers, and more modules later).
 
 ---
 
+## Getting started
+
+Clone the repo and run the setup script to install dependencies and configure git hooks:
+
+```bash
+bin/setup
+```
+
+> After cloning, `bin/setup` must be run once to activate the pre-commit hook that runs all tests before every commit.
+
+---
+
 ## Development
 
 The recommended way to develop is with Docker so you don't need a local Ruby or PostgreSQL install.
@@ -34,6 +46,22 @@ Run the test suite inside the running container:
 
 ```bash
 docker compose -f docker-compose.dev.yml exec web bundle exec rspec
+```
+
+### Frontend (PWA)
+
+```bash
+bun install --cwd frontend   # install dependencies (first time)
+bun run dev                  # start Vite dev server on http://localhost:5173
+bun test                     # run frontend tests
+```
+
+### Pre-commit hook
+
+All tests (frontend + backend) run automatically before every commit. The hook is in `.githooks/pre-commit` and is activated by `bin/setup`. To activate manually:
+
+```bash
+git config core.hooksPath .githooks
 ```
 
 ### Without Docker (native Ruby + Postgres)
