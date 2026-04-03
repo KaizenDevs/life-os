@@ -20,7 +20,7 @@ class GroupPolicy < ApplicationPolicy
   end
 
   def unarchive?
-    user.super_admin? || record.admin?(user)
+    super_admin_creator? || record.admin?(user)
   end
 
   def destroy?

@@ -11,6 +11,7 @@ import {
   acceptMembership,
 } from "../api/memberships";
 import { searchUsers } from "../api/users";
+import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import type { UserResult } from "../api/users";
 
@@ -33,6 +34,7 @@ export function MembersPage() {
 
   const { showToast } = useToast();
   const group = groupsData?.data.find((g) => g.id === gId);
+  const { currentUser } = useAuth();
   const isAdmin = group?.my_role === "admin";
   const memberships = data?.data ?? [];
 
@@ -192,7 +194,7 @@ export function MembersPage() {
             </div>
 
             {/* Accept own pending invite */}
-            {!m.accepted_at && (
+            {!m.accepted_at && m.user.email === currentUser?.email && (
               <button
                 onClick={() => acceptMutation.mutate(m.id)}
                 className="text-green-600 hover:text-green-700"

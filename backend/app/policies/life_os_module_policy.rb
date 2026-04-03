@@ -7,7 +7,7 @@ class LifeOsModulePolicy < ApplicationPolicy
   def update? = user.super_admin?
   def destroy? = user.super_admin?
 
-  class Scope < Scope
+  class Scope < ApplicationPolicy::Scope
     def resolve
       user.super_admin? ? scope.all : scope.where(enabled: true)
     end
