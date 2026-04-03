@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, Plus, Archive, ArchiveRestore, Pencil, Search } from "lucide-react";
+import { ChevronRight, Plus, Archive, ArchiveRestore, Pencil, Trash2, Search } from "lucide-react";
 import { useGroups } from "../hooks/useGroups";
-import { archiveGroup, unarchiveGroup } from "../api/groups";
+import { useAuth } from "../context/AuthContext";
+import { archiveGroup, unarchiveGroup, deleteGroup } from "../api/groups";
 
 type Tab = "active" | "archived";
 
 export function GroupsPage() {
   const { data, isLoading } = useGroups();
+  const { currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.system_role === "super_admin";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
@@ -21,6 +24,11 @@ export function GroupsPage() {
 
   const unarchiveMutation = useMutation({
     mutationFn: (id: number) => unarchiveGroup(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["groups"] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteGroup(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["groups"] }),
   });
 
@@ -116,6 +124,15 @@ export function GroupsPage() {
               >
                 {tab === "active" ? <Archive size={16} /> : <ArchiveRestore size={16} />}
               </button>
+              {tab === "archived" && isSuperAdmin && (
+                <button
+                  onClick={() => { if (confirm("Permanently delete this group?")) deleteMutation.mutate(group.id); }}
+                  className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                  title="Delete permanently"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </>)}
           </li>
         ))}

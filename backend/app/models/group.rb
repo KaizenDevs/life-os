@@ -4,7 +4,7 @@ class Group < ApplicationRecord
   enum :group_type, { household: 0, company: 1 }
 
   belongs_to :created_by, class_name: "User"
-  has_many :memberships, dependent: :destroy
+  has_many :memberships, dependent: :delete_all
   has_many :users, through: :memberships
   has_many :providers, dependent: :destroy
   has_many :group_modules, dependent: :destroy

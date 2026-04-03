@@ -136,11 +136,20 @@ RSpec.describe "Api::V1::Groups", type: :request do
       expect(group.reload.archived_at).to be_nil
     end
 
-    it "returns 403 for group admin" do
+    it "allows group admin to unarchive" do
       group = create(:group, created_by: super_admin, archived_at: 1.day.ago)
       admin_user = create(:user)
       create(:membership, :admin, group: group, user: admin_user)
       post unarchive_api_v1_group_path(group), headers: auth_headers(admin_user), as: :json
+      expect(response).to have_http_status(:ok)
+      expect(group.reload.archived_at).to be_nil
+    end
+
+    it "returns 403 for regular member" do
+      group = create(:group, created_by: super_admin, archived_at: 1.day.ago)
+      member = create(:user)
+      create(:membership, group: group, user: member)
+      post unarchive_api_v1_group_path(group), headers: auth_headers(member), as: :json
       expect(response).to have_http_status(:forbidden)
     end
   end

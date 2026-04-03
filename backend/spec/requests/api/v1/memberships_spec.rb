@@ -55,7 +55,7 @@ RSpec.describe "Api::V1::Memberships", type: :request do
       expect(response).to have_http_status(:forbidden)
     end
 
-    it "returns 404 when super_admin tries to invite to a group they did not create" do
+    it "allows super_admin to invite to any group" do
       other_admin = create(:user, :super_admin)
       other_group = create(:group, created_by: other_admin)
       invitee = create(:user)
@@ -63,7 +63,7 @@ RSpec.describe "Api::V1::Memberships", type: :request do
         params: { membership: { user_id: invitee.id, role: "member" } },
         headers: auth_headers(super_admin),
         as: :json
-      expect(response).to have_http_status(:not_found)
+      expect(response).to have_http_status(:created)
     end
   end
 

@@ -1,11 +1,12 @@
 import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Phone, Mail, MapPin, Plus, Pencil, Archive, ArchiveRestore, Users, Search } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Plus, Pencil, Archive, ArchiveRestore, Trash2, Users, Search } from "lucide-react";
 import { useGroups } from "../hooks/useGroups";
 import { useProviders } from "../hooks/useProviders";
-import { archiveProvider, unarchiveProvider } from "../api/providers";
+import { archiveProvider, unarchiveProvider, deleteProvider } from "../api/providers";
 import { fetchGroupModules } from "../api/modules";
+import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../api/client";
 import type { Provider } from "../types";
 
@@ -45,6 +46,9 @@ export function ProvidersPage() {
     if (l) { setLetter(l); setQuery(""); }
   }
 
+  const { currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.system_role === "super_admin";
+
   const { data: groupsData } = useGroups();
   const { data, isLoading } = useProviders(gId);
   const { data: archivedData, isLoading: isLoadingArchived } = useQuery({
@@ -73,6 +77,11 @@ export function ProvidersPage() {
     onSuccess: invalidateProviders,
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteProvider(gId, id),
+    onSuccess: invalidateProviders,
+  });
+
   function ProviderCard({
     provider,
     isArchived,
@@ -89,8 +98,8 @@ export function ProvidersPage() {
               {provider.category.name}
             </p>
           </div>
-          {canWrite && (
-            <div className="flex gap-2">
+          <div className="flex gap-2">
+            {canWrite && (<>
               {!isArchived && (
                 <button
                   onClick={() => navigate(`/groups/${groupId}/providers/${provider.id}/edit`)}
@@ -111,8 +120,17 @@ export function ProvidersPage() {
               >
                 {isArchived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
               </button>
-            </div>
-          )}
+            </>)}
+            {isArchived && isSuperAdmin && (
+              <button
+                onClick={() => { if (confirm("Permanently delete this provider?")) deleteMutation.mutate(provider.id); }}
+                className="text-gray-300 hover:text-red-500 transition-colors"
+                title="Delete permanently"
+              >
+                <Trash2 size={15} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="mt-2 flex flex-col gap-1">

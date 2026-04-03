@@ -20,17 +20,17 @@ class GroupPolicy < ApplicationPolicy
   end
 
   def unarchive?
-    super_admin_creator?
+    user.super_admin? || record.admin?(user)
   end
 
   def destroy?
-    super_admin_creator?
+    user.super_admin?
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
       if user.super_admin?
-        scope.where(created_by: user)
+        scope.all
       else
         scope.joins(:memberships).where(memberships: { user_id: user.id })
       end
