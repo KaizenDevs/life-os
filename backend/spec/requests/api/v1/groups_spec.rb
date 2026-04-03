@@ -152,6 +152,13 @@ RSpec.describe "Api::V1::Groups", type: :request do
       post unarchive_api_v1_group_path(group), headers: auth_headers(member), as: :json
       expect(response).to have_http_status(:forbidden)
     end
+
+    it "returns 403 for a super_admin who did not create the group" do
+      other_admin = create(:user, :super_admin)
+      group = create(:group, created_by: super_admin, archived_at: 1.day.ago)
+      post unarchive_api_v1_group_path(group), headers: auth_headers(other_admin), as: :json
+      expect(response).to have_http_status(:forbidden)
+    end
   end
 
   describe "DELETE /api/v1/groups/:id" do
