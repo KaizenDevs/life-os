@@ -65,23 +65,23 @@ export function GroupsPage() {
               <ChevronRight size={18} className="text-gray-300" />
             </button>
 
-            {/* Edit */}
-            <button
-              onClick={() => navigate(`/groups/${group.id}/edit`)}
-              className="p-2 text-gray-300 hover:text-blue-500 transition-colors"
-              title="Edit group"
-            >
-              <Pencil size={16} />
-            </button>
-
-            {/* Archive */}
-            <button
-              onClick={() => archiveMutation.mutate(group.id)}
-              className="p-2 text-gray-300 hover:text-orange-400 transition-colors"
-              title="Archive group"
-            >
-              <Archive size={16} />
-            </button>
+            {/* Edit / Archive — admin only */}
+            {group.my_role === "admin" && (<>
+              <button
+                onClick={() => navigate(`/groups/${group.id}/edit`)}
+                className="p-2 text-gray-300 hover:text-blue-500 transition-colors"
+                title="Edit group"
+              >
+                <Pencil size={16} />
+              </button>
+              <button
+                onClick={() => archiveMutation.mutate(group.id)}
+                className="p-2 text-gray-300 hover:text-orange-400 transition-colors"
+                title="Archive group"
+              >
+                <Archive size={16} />
+              </button>
+            </>)}
           </li>
         ))}
       </ul>

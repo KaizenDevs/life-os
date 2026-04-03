@@ -31,6 +31,7 @@ export function MembersPage() {
   const [inviteError, setInviteError] = useState("");
 
   const group = groupsData?.data.find((g) => g.id === gId);
+  const isAdmin = group?.my_role === "admin";
   const memberships = data?.data ?? [];
 
   // Search users by email
@@ -88,8 +89,8 @@ export function MembersPage() {
         </h2>
       </div>
 
-      {/* Invite form */}
-      <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
+      {/* Invite form — admin only */}
+      {isAdmin && <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
         <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
           <UserPlus size={15} /> Invite someone
         </p>
@@ -158,7 +159,7 @@ export function MembersPage() {
         {inviteError && (
           <p className="text-red-500 text-sm mt-2">{inviteError}</p>
         )}
-      </div>
+      </div>}
 
       {/* Members list */}
       {isLoading && <p className="text-gray-400 text-sm">Loading…</p>}
@@ -187,27 +188,33 @@ export function MembersPage() {
               </button>
             )}
 
-            {/* Role selector */}
-            <select
-              value={m.role}
-              onChange={(e) => roleMutation.mutate({ id: m.id, role: e.target.value })}
-              className="border rounded-lg px-2 py-1 text-sm bg-white focus:outline-none capitalize"
-            >
-              {ROLES.map((r) => (
-                <option key={r} value={r} className="capitalize">
-                  {r}
-                </option>
-              ))}
-            </select>
+            {/* Role selector — admin only */}
+            {isAdmin ? (
+              <select
+                value={m.role}
+                onChange={(e) => roleMutation.mutate({ id: m.id, role: e.target.value })}
+                className="border rounded-lg px-2 py-1 text-sm bg-white focus:outline-none capitalize"
+              >
+                {ROLES.map((r) => (
+                  <option key={r} value={r} className="capitalize">
+                    {r}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-sm text-gray-400 capitalize">{m.role}</span>
+            )}
 
-            {/* Remove */}
-            <button
-              onClick={() => removeMutation.mutate(m.id)}
-              className="text-gray-300 hover:text-red-500 transition-colors"
-              title="Remove member"
-            >
-              <Trash2 size={16} />
-            </button>
+            {/* Remove — admin only */}
+            {isAdmin && (
+              <button
+                onClick={() => removeMutation.mutate(m.id)}
+                className="text-gray-300 hover:text-red-500 transition-colors"
+                title="Remove member"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </li>
         ))}
       </ul>

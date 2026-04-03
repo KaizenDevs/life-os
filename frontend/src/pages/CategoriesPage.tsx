@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash2, Check, X, Plus, Search } from "lucide-react";
 import { useCategories } from "../hooks/useCategories";
+import { useAuth } from "../context/AuthContext";
 import {
   createCategory,
   updateCategory,
@@ -10,6 +11,8 @@ import {
 
 export function CategoriesPage() {
   const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.system_role === "super_admin";
   const { data, isLoading } = useCategories();
 
   const [newName, setNewName] = useState("");
@@ -107,42 +110,46 @@ export function CategoriesPage() {
             ) : (
               <>
                 <span className="flex-1 text-sm capitalize">{c.name}</span>
-                <button
-                  onClick={() => startEdit(c.id, c.name)}
-                  className="text-gray-300 hover:text-blue-500 transition-colors"
-                >
-                  <Pencil size={15} />
-                </button>
-                <button
-                  onClick={() => deleteMutation.mutate(c.id)}
-                  className="text-gray-300 hover:text-red-500 transition-colors"
-                >
-                  <Trash2 size={15} />
-                </button>
+                {isSuperAdmin && (<>
+                  <button
+                    onClick={() => startEdit(c.id, c.name)}
+                    className="text-gray-300 hover:text-blue-500 transition-colors"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                  <button
+                    onClick={() => deleteMutation.mutate(c.id)}
+                    className="text-gray-300 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </>)}
               </>
             )}
           </li>
         ))}
       </ul>
 
-      {/* Add new category */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="New category name"
-          onKeyDown={(e) => e.key === "Enter" && createMutation.mutate()}
-          className="flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          onClick={() => createMutation.mutate()}
-          disabled={!newName.trim() || createMutation.isPending}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-1 text-sm"
-        >
-          <Plus size={15} /> Add
-        </button>
-      </div>
+      {/* Add new category — super_admin only */}
+      {isSuperAdmin && (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="New category name"
+            onKeyDown={(e) => e.key === "Enter" && createMutation.mutate()}
+            className="flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={() => createMutation.mutate()}
+            disabled={!newName.trim() || createMutation.isPending}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-1 text-sm"
+          >
+            <Plus size={15} /> Add
+          </button>
+        </div>
+      )}
     </div>
   );
 }

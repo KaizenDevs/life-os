@@ -54,6 +54,7 @@ export function ProvidersPage() {
   });
 
   const group = groupsData?.data.find((g) => g.id === gId);
+  const canWrite = group?.my_role === "admin" || group?.my_role === "member";
   const active = data?.data ?? [];
   const archived = archivedData?.data ?? [];
 
@@ -88,28 +89,30 @@ export function ProvidersPage() {
               {provider.category.name}
             </p>
           </div>
-          <div className="flex gap-2">
-            {!isArchived && (
+          {canWrite && (
+            <div className="flex gap-2">
+              {!isArchived && (
+                <button
+                  onClick={() => navigate(`/groups/${groupId}/providers/${provider.id}/edit`)}
+                  className="text-gray-300 hover:text-blue-500 transition-colors"
+                  title="Edit"
+                >
+                  <Pencil size={15} />
+                </button>
+              )}
               <button
-                onClick={() => navigate(`/groups/${groupId}/providers/${provider.id}/edit`)}
-                className="text-gray-300 hover:text-blue-500 transition-colors"
-                title="Edit"
+                onClick={() =>
+                  isArchived
+                    ? unarchiveMutation.mutate(provider.id)
+                    : archiveMutation.mutate(provider.id)
+                }
+                className="text-gray-300 hover:text-orange-400 transition-colors"
+                title={isArchived ? "Unarchive" : "Archive"}
               >
-                <Pencil size={15} />
+                {isArchived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
               </button>
-            )}
-            <button
-              onClick={() =>
-                isArchived
-                  ? unarchiveMutation.mutate(provider.id)
-                  : archiveMutation.mutate(provider.id)
-              }
-              className="text-gray-300 hover:text-orange-400 transition-colors"
-              title={isArchived ? "Unarchive" : "Archive"}
-            >
-              {isArchived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
-            </button>
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="mt-2 flex flex-col gap-1">
@@ -161,7 +164,7 @@ export function ProvidersPage() {
         >
           <Users size={18} />
         </button>
-        {tab === "active" && (
+        {tab === "active" && canWrite && (
           <button
             onClick={() => navigate(`/groups/${groupId}/providers/new`)}
             className="flex items-center gap-1 text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
