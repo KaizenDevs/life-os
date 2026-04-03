@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { mock } from "bun:test";
 import { AuthContext } from "../context/AuthContext";
+import { ToastProvider } from "../context/ToastContext";
 
 interface CurrentUser {
   email: string;
@@ -30,6 +31,7 @@ export function renderWithProviders(
 
   return render(
     <QueryClientProvider client={queryClient}>
+      <ToastProvider>
       <AuthContext.Provider
         value={{
           token: authToken,
@@ -41,6 +43,7 @@ export function renderWithProviders(
       >
         <MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>
       </AuthContext.Provider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }

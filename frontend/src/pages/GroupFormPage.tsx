@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { createGroup, updateGroup } from "../api/groups";
+import { useToast } from "../context/ToastContext";
 import { useGroups } from "../hooks/useGroups";
 
 export function GroupFormPage() {
@@ -12,6 +13,7 @@ export function GroupFormPage() {
   const queryClient = useQueryClient();
   const { data: groupsData } = useGroups();
 
+  const { showToast } = useToast();
   const [name, setName] = useState("");
   const [groupType, setGroupType] = useState("household");
   const [error, setError] = useState("");
@@ -34,10 +36,13 @@ export function GroupFormPage() {
         : createGroup({ name, group_type: groupType }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+      showToast(isEditing ? "Group updated" : "Group created", "success");
       navigate("/groups");
     },
     onError: (err: any) => {
-      setError(err.errors?.[0] ?? "Something went wrong");
+      const msg = err.errors?.[0] ?? "Something went wrong";
+      setError(msg);
+      showToast(msg, "error");
     },
   });
 

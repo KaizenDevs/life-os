@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { createProvider, updateProvider, fetchProvider } from "../api/providers";
+import { useToast } from "../context/ToastContext";
 import { useCategories } from "../hooks/useCategories";
 
 export function ProviderFormPage() {
@@ -21,6 +22,7 @@ export function ProviderFormPage() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const { showToast } = useToast();
   const [error, setError] = useState("");
 
   // Prefill when editing
@@ -60,10 +62,13 @@ export function ProviderFormPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["providers", Number(groupId)] });
+      showToast(isEditing ? "Provider updated" : "Provider added", "success");
       navigate(`/groups/${groupId}/providers`);
     },
     onError: (err: any) => {
-      setError(err.errors?.[0] ?? "Something went wrong");
+      const msg = err.errors?.[0] ?? "Something went wrong";
+      setError(msg);
+      showToast(msg, "error");
     },
   });
 

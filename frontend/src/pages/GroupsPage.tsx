@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, Plus, Archive, ArchiveRestore, Pencil, Trash2, Search } from "lucide-react";
 import { useGroups } from "../hooks/useGroups";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { archiveGroup, unarchiveGroup, deleteGroup } from "../api/groups";
 
 type Tab = "active" | "archived";
@@ -11,6 +12,7 @@ type Tab = "active" | "archived";
 export function GroupsPage() {
   const { data, isLoading } = useGroups();
   const { currentUser } = useAuth();
+  const { showToast } = useToast();
   const isSuperAdmin = currentUser?.system_role === "super_admin";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -19,17 +21,20 @@ export function GroupsPage() {
 
   const archiveMutation = useMutation({
     mutationFn: (id: number) => archiveGroup(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["groups"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["groups"] }); showToast("Group archived", "success"); },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not archive group", "error"),
   });
 
   const unarchiveMutation = useMutation({
     mutationFn: (id: number) => unarchiveGroup(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["groups"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["groups"] }); showToast("Group restored", "success"); },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not restore group", "error"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteGroup(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["groups"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["groups"] }); showToast("Group deleted", "success"); },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not delete group", "error"),
   });
 
   const allGroups = data?.data ?? [];

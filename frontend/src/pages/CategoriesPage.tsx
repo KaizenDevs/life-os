@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash2, Check, X, Plus, Search } from "lucide-react";
 import { useCategories } from "../hooks/useCategories";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import {
   createCategory,
   updateCategory,
@@ -13,6 +14,7 @@ export function CategoriesPage() {
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
   const isSuperAdmin = currentUser?.system_role === "super_admin";
+  const { showToast } = useToast();
   const { data, isLoading } = useCategories();
 
   const [newName, setNewName] = useState("");
@@ -32,8 +34,13 @@ export function CategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       setNewName("");
       setError("");
+      showToast("Category created", "success");
     },
-    onError: (err: any) => setError(err.errors?.[0] ?? "Could not create category"),
+    onError: (err: any) => {
+      const msg = err.errors?.[0] ?? "Could not create category";
+      setError(msg);
+      showToast(msg, "error");
+    },
   });
 
   const updateMutation = useMutation({
@@ -42,15 +49,22 @@ export function CategoriesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       setEditingId(null);
+      showToast("Category updated", "success");
     },
-    onError: (err: any) => setError(err.errors?.[0] ?? "Could not update category"),
+    onError: (err: any) => {
+      const msg = err.errors?.[0] ?? "Could not update category";
+      setError(msg);
+      showToast(msg, "error");
+    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteCategory(id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["categories"] }),
-    onError: (err: any) => setError(err.errors?.[0] ?? "Could not delete category"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      showToast("Category deleted", "success");
+    },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not delete category", "error"),
   });
 
   function startEdit(id: number, name: string) {

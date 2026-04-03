@@ -7,6 +7,7 @@ import { useProviders } from "../hooks/useProviders";
 import { archiveProvider, unarchiveProvider, deleteProvider } from "../api/providers";
 import { fetchGroupModules } from "../api/modules";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { apiFetch } from "../api/client";
 import type { Provider } from "../types";
 
@@ -48,6 +49,7 @@ export function ProvidersPage() {
 
   const { currentUser } = useAuth();
   const isSuperAdmin = currentUser?.system_role === "super_admin";
+  const { showToast } = useToast();
 
   const { data: groupsData } = useGroups();
   const { data, isLoading } = useProviders(gId);
@@ -69,17 +71,20 @@ export function ProvidersPage() {
 
   const archiveMutation = useMutation({
     mutationFn: (id: number) => archiveProvider(gId, id),
-    onSuccess: invalidateProviders,
+    onSuccess: () => { invalidateProviders(); showToast("Provider archived", "success"); },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not archive provider", "error"),
   });
 
   const unarchiveMutation = useMutation({
     mutationFn: (id: number) => unarchiveProvider(gId, id),
-    onSuccess: invalidateProviders,
+    onSuccess: () => { invalidateProviders(); showToast("Provider restored", "success"); },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not restore provider", "error"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteProvider(gId, id),
-    onSuccess: invalidateProviders,
+    onSuccess: () => { invalidateProviders(); showToast("Provider deleted", "success"); },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not delete provider", "error"),
   });
 
   function ProviderCard({

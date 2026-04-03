@@ -11,6 +11,7 @@ import {
   acceptMembership,
 } from "../api/memberships";
 import { searchUsers } from "../api/users";
+import { useToast } from "../context/ToastContext";
 import type { UserResult } from "../api/users";
 
 const ROLES = ["viewer", "member", "admin"];
@@ -30,6 +31,7 @@ export function MembersPage() {
   const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
   const [inviteError, setInviteError] = useState("");
 
+  const { showToast } = useToast();
   const group = groupsData?.data.find((g) => g.id === gId);
   const isAdmin = group?.my_role === "admin";
   const memberships = data?.data ?? [];
@@ -50,29 +52,41 @@ export function MembersPage() {
       setSearchResults([]);
       setSelectedUser(null);
       setInviteError("");
+      showToast("Invitation sent", "success");
     },
     onError: (err: any) => {
-      setInviteError(err.errors?.[0] ?? "Could not invite user");
+      const msg = err.errors?.[0] ?? "Could not invite user";
+      setInviteError(msg);
+      showToast(msg, "error");
     },
   });
 
   const roleMutation = useMutation({
     mutationFn: ({ id, role }: { id: number; role: string }) =>
       updateMembership(gId, id, role),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["memberships", gId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["memberships", gId] });
+      showToast("Role updated", "success");
+    },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not update role", "error"),
   });
 
   const removeMutation = useMutation({
     mutationFn: (id: number) => deleteMembership(gId, id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["memberships", gId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["memberships", gId] });
+      showToast("Member removed", "success");
+    },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not remove member", "error"),
   });
 
   const acceptMutation = useMutation({
     mutationFn: (id: number) => acceptMembership(gId, id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["memberships", gId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["memberships", gId] });
+      showToast("Invitation accepted", "success");
+    },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not accept invitation", "error"),
   });
 
   return (

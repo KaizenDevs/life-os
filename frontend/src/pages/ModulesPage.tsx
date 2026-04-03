@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchModules, updateModule } from "../api/modules";
+import { useToast } from "../context/ToastContext";
 
 export function ModulesPage() {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const { data, isLoading } = useQuery({
     queryKey: ["modules"],
     queryFn: fetchModules,
@@ -11,7 +13,11 @@ export function ModulesPage() {
   const toggleMutation = useMutation({
     mutationFn: ({ id, enabled }: { id: number; enabled: boolean }) =>
       updateModule(id, enabled),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["modules"] }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
+      showToast(`Module ${res.data.enabled ? "enabled" : "disabled"}`, "success");
+    },
+    onError: (err: any) => showToast(err.errors?.[0] ?? "Could not update module", "error"),
   });
 
   const modules = data?.data ?? [];
