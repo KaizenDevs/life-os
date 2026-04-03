@@ -24,6 +24,9 @@ const stubCategories = {
   ],
 };
 
+const superAdmin = { email: "admin@example.com", system_role: "super_admin" };
+const regularUser = { email: "user@example.com", system_role: "user" };
+
 describe("CategoriesPage", () => {
   beforeEach(() => {
     mockFetchCategories.mockClear();
@@ -41,11 +44,18 @@ describe("CategoriesPage", () => {
     expect(screen.getByText("electrical")).toBeInTheDocument();
   });
 
+  it("hides add/edit/delete for regular users", async () => {
+    renderWithProviders(<CategoriesPage />, { currentUser: regularUser });
+    await waitFor(() => screen.getByText("plumbing"));
+    expect(screen.queryByPlaceholderText(/new category name/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /add/i })).toBeNull();
+  });
+
   it("creates a new category", async () => {
     mockCreateCategory.mockResolvedValueOnce({
       data: { id: 3, name: "hvac" },
     });
-    renderWithProviders(<CategoriesPage />);
+    renderWithProviders(<CategoriesPage />, { currentUser: superAdmin });
     await waitFor(() => screen.getByText("plumbing"));
 
     await userEvent.type(
@@ -60,7 +70,7 @@ describe("CategoriesPage", () => {
   });
 
   it("enters edit mode on pencil click", async () => {
-    renderWithProviders(<CategoriesPage />);
+    renderWithProviders(<CategoriesPage />, { currentUser: superAdmin });
     await waitFor(() => screen.getByText("plumbing"));
 
     // Each item has [edit, delete] buttons; first item edit is index 0
@@ -74,7 +84,7 @@ describe("CategoriesPage", () => {
     mockUpdateCategory.mockResolvedValueOnce({
       data: { id: 1, name: "plumbing fixed" },
     });
-    renderWithProviders(<CategoriesPage />);
+    renderWithProviders(<CategoriesPage />, { currentUser: superAdmin });
     await waitFor(() => screen.getByText("plumbing"));
 
     // Open edit mode
@@ -94,7 +104,7 @@ describe("CategoriesPage", () => {
 
   it("deletes a category", async () => {
     mockDeleteCategory.mockResolvedValueOnce(undefined);
-    renderWithProviders(<CategoriesPage />);
+    renderWithProviders(<CategoriesPage />, { currentUser: superAdmin });
     await waitFor(() => screen.getByText("plumbing"));
 
     // Each item has [edit, delete]; delete for first item is index 1

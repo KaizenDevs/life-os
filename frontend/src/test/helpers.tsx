@@ -5,14 +5,24 @@ import { MemoryRouter } from "react-router-dom";
 import { mock } from "bun:test";
 import { AuthContext } from "../context/AuthContext";
 
+interface CurrentUser {
+  email: string;
+  system_role: string;
+}
+
 interface RenderOptions {
   initialEntries?: string[];
   authToken?: string | null;
+  currentUser?: CurrentUser | null;
 }
 
 export function renderWithProviders(
   ui: ReactNode,
-  { initialEntries = ["/"], authToken = "test-token" }: RenderOptions = {}
+  {
+    initialEntries = ["/"],
+    authToken = "test-token",
+    currentUser = { email: "user@example.com", system_role: "user" },
+  }: RenderOptions = {}
 ) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -23,6 +33,7 @@ export function renderWithProviders(
       <AuthContext.Provider
         value={{
           token: authToken,
+          currentUser: authToken ? currentUser : null,
           isAuthenticated: !!authToken,
           signIn: mock(),
           signOut: mock(),
