@@ -19,6 +19,14 @@ module Api
       def unauthorized
         render json: { error: I18n.t("errors.authentication.invalid_token") }, status: :unauthorized
       end
+
+      def require_module!(key, group)
+        mod = LifeOsModule.find_by(key: key)
+        return render json: { error: "Module not available" }, status: :forbidden unless mod&.enabled?
+
+        gm = group.group_modules.find_by(life_os_module: mod)
+        return render json: { error: "Module not available" }, status: :forbidden unless gm&.enabled?
+      end
     end
   end
 end

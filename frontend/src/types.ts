@@ -35,7 +35,7 @@ export interface LifeOsModule {
 export interface GroupModule {
   id: number;
   enabled: boolean;
-  module: LifeOsModule;
+  module: LifeOsModule & { enabled: boolean };
 }
 
 export interface Membership {

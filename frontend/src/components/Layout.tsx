@@ -3,11 +3,11 @@
 // Desktop: sticky header + nav links inline
 
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, Building2, Settings } from "lucide-react";
+import { Home, Building2, Settings, Puzzle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export function Layout() {
-  const { signOut } = useAuth();
+  const { signOut, currentUser } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -42,14 +42,32 @@ export function Layout() {
             >
               Categories
             </NavLink>
+            {currentUser?.system_role === "super_admin" && (
+              <NavLink
+                to="/modules"
+                className={({ isActive }) =>
+                  `text-sm font-medium ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-800"}`
+                }
+              >
+                Modules
+              </NavLink>
+            )}
           </nav>
         </div>
-        <button
-          onClick={signOut}
-          className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-3">
+          {currentUser && (
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-gray-700">{currentUser.email}</p>
+              <p className="text-xs text-gray-400 capitalize">{currentUser.system_role?.replace("_", " ")}</p>
+            </div>
+          )}
+          <button
+            onClick={signOut}
+            className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
 
       {/* Page content */}
@@ -94,6 +112,19 @@ export function Layout() {
             <Settings size={20} />
             Categories
           </NavLink>
+          {currentUser?.system_role === "super_admin" && (
+            <NavLink
+              to="/modules"
+              className={({ isActive }) =>
+                `flex-1 flex flex-col items-center py-2 gap-1 text-xs ${
+                  isActive ? "text-blue-600" : "text-gray-400"
+                }`
+              }
+            >
+              <Puzzle size={20} />
+              Modules
+            </NavLink>
+          )}
         </div>
       </nav>
     </div>

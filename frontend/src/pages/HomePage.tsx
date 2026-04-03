@@ -20,7 +20,7 @@ function GroupCard({ group }: { group: Group }) {
     queryFn: () => fetchGroupModules(group.id),
   });
 
-  const modules = (data?.data ?? []).filter((gm) => gm.enabled);
+  const modules = (data?.data ?? []).filter((gm) => gm.enabled && gm.module.enabled);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-4">

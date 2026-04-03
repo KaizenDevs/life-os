@@ -5,6 +5,7 @@ import { ArrowLeft, Phone, Mail, MapPin, Plus, Pencil, Archive, ArchiveRestore, 
 import { useGroups } from "../hooks/useGroups";
 import { useProviders } from "../hooks/useProviders";
 import { archiveProvider, unarchiveProvider } from "../api/providers";
+import { fetchGroupModules } from "../api/modules";
 import { apiFetch } from "../api/client";
 import type { Provider } from "../types";
 
@@ -15,6 +16,19 @@ export function ProvidersPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const gId = Number(groupId);
+
+  const { data: modulesData } = useQuery({
+    queryKey: ["group_modules", gId],
+    queryFn: () => fetchGroupModules(gId),
+  });
+
+  const contactsModule = modulesData?.data.find((gm) => gm.module.key === "contacts_book");
+  const moduleEnabled = contactsModule ? contactsModule.enabled && contactsModule.module.enabled : true;
+
+  if (modulesData && !moduleEnabled) {
+    navigate("/", { replace: true });
+    return null;
+  }
 
   const [tab, setTab] = useState<Tab>("active");
   const [query, setQuery] = useState("");

@@ -9,7 +9,7 @@ class LifeOsModulePolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      scope.where(enabled: true)
+      user.super_admin? ? scope.all : scope.where(enabled: true)
     end
   end
 end

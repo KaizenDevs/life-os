@@ -12,6 +12,7 @@ import { ProvidersPage } from "./pages/ProvidersPage";
 import { ProviderFormPage } from "./pages/ProviderFormPage";
 import { MembersPage } from "./pages/MembersPage";
 import { CategoriesPage } from "./pages/CategoriesPage";
+import { ModulesPage } from "./pages/ModulesPage";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="/groups/:groupId/providers/:providerId/edit" element={<ProviderFormPage />} />
               <Route path="/groups/:groupId/members" element={<MembersPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/modules" element={<ModulesPage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

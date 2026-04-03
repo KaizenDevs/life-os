@@ -5,6 +5,7 @@ module Api
     class ProvidersController < BaseController
       before_action :set_group
       before_action :set_provider, only: [:show, :update, :destroy, :archive, :unarchive]
+      before_action -> { require_module!("contacts_book", @group) }
 
       def index
         providers = policy_scope(Provider)

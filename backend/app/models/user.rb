@@ -13,6 +13,10 @@ class User < ApplicationRecord
 
   before_validation :set_jti, on: :create
 
+  def jwt_payload
+    super.merge("system_role" => system_role, "email" => email)
+  end
+
   private
 
   def set_jti

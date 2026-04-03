@@ -28,7 +28,9 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    const error: ApiError = { status: response.status, ...body };
+    // Normalize: backend may return { errors: [...] } or { error: "..." }
+    const errors: string[] = body.errors ?? (body.error ? [body.error] : []);
+    const error: ApiError = { status: response.status, errors };
     throw error;
   }
 

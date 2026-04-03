@@ -13,6 +13,36 @@ RSpec.describe "Api::V1::Providers", type: :request do
   let(:default_category) { create(:category, name: "plumber") }
   let(:provider) { create(:provider, group: group, category: default_category) }
 
+  # Ensure contacts_book module is enabled for the group so require_module! passes
+  before do
+    mod = LifeOsModule.find_or_create_by!(key: "contacts_book") { |m| m.name = "Contacts Book"; m.enabled = true }
+    group.group_modules.find_or_create_by!(life_os_module: mod) { |gm| gm.enabled = true }
+  end
+
+  describe "module disabled" do
+    before do
+      mod = LifeOsModule.find_by!(key: "contacts_book")
+      mod.update!(enabled: false)
+    end
+
+    it "returns 403 when the global module is disabled" do
+      get api_v1_group_providers_path(group), headers: auth_headers(admin_user), as: :json
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  describe "group module disabled" do
+    before do
+      mod = LifeOsModule.find_by!(key: "contacts_book")
+      group.group_modules.find_by!(life_os_module: mod).update!(enabled: false)
+    end
+
+    it "returns 403 when the group module is disabled" do
+      get api_v1_group_providers_path(group), headers: auth_headers(admin_user), as: :json
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
   describe "GET /api/v1/groups/:group_id/providers" do
     before { create(:provider, group: group, name: "Active Provider", category: default_category) }
 

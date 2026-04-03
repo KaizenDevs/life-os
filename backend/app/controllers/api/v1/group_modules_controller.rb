@@ -27,7 +27,7 @@ module Api
         {
           id: gm.id,
           enabled: gm.enabled,
-          module: gm.life_os_module.as_json(only: %i[id name key])
+          module: gm.life_os_module.as_json(only: %i[id name key enabled])
         }
       end
     end
