@@ -58,7 +58,11 @@ bun test                     # run frontend tests
 
 ### Pre-commit hook
 
-All tests (frontend + backend) run automatically before every commit. The hook is in `.githooks/pre-commit` and is activated by `bin/setup`. To activate manually:
+Before every commit the hook runs **frontend** tests (`bun test`) and **backend** tests (RSpec in the Docker `web` container). The commit is aborted if either fails or if the backend cannot run (Docker not available, daemon down, or `web` not running — start with `docker compose up -d`).
+
+To **skip backend tests once** (not recommended): `SKIP_BACKEND_PRECOMMIT=1 git commit ...`
+
+The hook lives in `.githooks/pre-commit` and is activated by `bin/setup`. To activate manually:
 
 ```bash
 git config core.hooksPath .githooks

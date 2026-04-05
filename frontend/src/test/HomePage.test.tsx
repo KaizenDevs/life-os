@@ -39,6 +39,7 @@ describe("HomePage", () => {
     renderWithProviders(<HomePage />);
     await waitFor(() => screen.getByText("My Home"));
     expect(screen.queryByText("Old Home")).toBeNull();
+    await waitFor(() => expect(mockFetchGroupModules).toHaveBeenCalledWith(1));
   });
 
   it("shows empty state when no active groups", async () => {
@@ -64,5 +65,6 @@ describe("HomePage", () => {
     mockUseGroups.mockReturnValue({ data: { data: [activeGroup] }, isLoading: false });
     renderWithProviders(<HomePage />);
     await waitFor(() => screen.getByText("No modules enabled."));
+    await waitFor(() => expect(mockFetchGroupModules).toHaveBeenCalledWith(1));
   });
 });

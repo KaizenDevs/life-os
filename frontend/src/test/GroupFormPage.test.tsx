@@ -34,12 +34,14 @@ const stubGroup: Group = {
 const CreateForm = () => (
   <Routes>
     <Route path="/groups/new" element={<GroupFormPage />} />
+    <Route path="/groups" element={null} />
   </Routes>
 );
 
 const EditForm = () => (
   <Routes>
     <Route path="/groups/:id/edit" element={<GroupFormPage />} />
+    <Route path="/groups" element={null} />
   </Routes>
 );
 

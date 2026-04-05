@@ -44,12 +44,15 @@ const stubProvider = {
 const CreateForm = () => (
   <Routes>
     <Route path="/groups/:groupId/providers/new" element={<ProviderFormPage />} />
+    {/* Form navigates here after save — avoid "No routes matched" in tests */}
+    <Route path="/groups/:groupId/providers" element={null} />
   </Routes>
 );
 
 const EditForm = () => (
   <Routes>
     <Route path="/groups/:groupId/providers/:providerId/edit" element={<ProviderFormPage />} />
+    <Route path="/groups/:groupId/providers" element={null} />
   </Routes>
 );
 
