@@ -1,7 +1,20 @@
 import { useState, useRef } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Phone, Mail, MapPin, Plus, Pencil, Archive, ArchiveRestore, Trash2, Users, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  Phone,
+  Mail,
+  MapPin,
+  Plus,
+  Pencil,
+  Archive,
+  ArchiveRestore,
+  Trash2,
+  Users,
+  Search,
+  MessageCircle,
+} from "lucide-react";
 import { useGroups } from "../hooks/useGroups";
 import { useProviders } from "../hooks/useProviders";
 import { archiveProvider, unarchiveProvider, deleteProvider } from "../api/providers";
@@ -12,6 +25,13 @@ import { apiFetch } from "../api/client";
 import type { Provider } from "../types";
 
 type Tab = "active" | "archived";
+
+/** International number as digits only for https://wa.me/ */
+function whatsappUrlFromPhone(phone: string): string | null {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 8) return null;
+  return `https://wa.me/${digits}`;
+}
 
 export function ProvidersPage() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -98,6 +118,10 @@ export function ProvidersPage() {
     provider: Provider;
     isArchived: boolean;
   }) {
+    const whatsappHref = provider.phone
+      ? whatsappUrlFromPhone(provider.phone)
+      : null;
+
     return (
       <li className="bg-white rounded-xl p-4 shadow-sm">
         <div className="flex justify-between items-start">
@@ -144,10 +168,27 @@ export function ProvidersPage() {
 
         <div className="mt-2 flex flex-col gap-1">
           {provider.phone && (
-            <a href={`tel:${provider.phone}`} className="flex items-center gap-2 text-sm text-blue-600">
-              <Phone size={13} />
-              {provider.phone}
-            </a>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <a
+                href={`tel:${provider.phone}`}
+                className="flex items-center gap-2 text-blue-600 hover:underline"
+              >
+                <Phone size={13} />
+                {provider.phone}
+              </a>
+              {whatsappHref && (
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 hover:underline"
+                  title="Open WhatsApp chat"
+                >
+                  <MessageCircle size={13} />
+                  WhatsApp
+                </a>
+              )}
+            </div>
           )}
           {provider.email && (
             <a href={`mailto:${provider.email}`} className="flex items-center gap-2 text-sm text-blue-600">
