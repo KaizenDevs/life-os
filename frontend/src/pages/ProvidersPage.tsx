@@ -33,6 +33,14 @@ function whatsappUrlFromPhone(phone: string): string | null {
   return `https://wa.me/${digits}`;
 }
 
+function mapsUrlsFromAddress(address: string): { google: string; waze: string } {
+  const q = encodeURIComponent(address.trim());
+  return {
+    google: `https://www.google.com/maps/search/?api=1&query=${q}`,
+    waze: `https://waze.com/ul?q=${q}`,
+  };
+}
+
 export function ProvidersPage() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
@@ -121,6 +129,10 @@ export function ProvidersPage() {
     const whatsappHref = provider.phone
       ? whatsappUrlFromPhone(provider.phone)
       : null;
+    const mapsHref =
+      provider.address && provider.address.trim().length > 0
+        ? mapsUrlsFromAddress(provider.address)
+        : null;
 
     return (
       <li className="bg-white rounded-xl p-4 shadow-sm">
@@ -197,10 +209,32 @@ export function ProvidersPage() {
             </a>
           )}
           {provider.address && (
-            <p className="flex items-center gap-2 text-sm text-gray-500">
-              <MapPin size={13} />
-              {provider.address}
-            </p>
+            <div className="flex items-start gap-2 text-sm text-gray-500">
+              <MapPin size={13} className="mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <p>{provider.address}</p>
+                {mapsHref && (
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <a
+                      href={mapsHref.google}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 hover:underline"
+                    >
+                      Google Maps
+                    </a>
+                    <a
+                      href={mapsHref.waze}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sky-600 hover:text-sky-700 hover:underline"
+                    >
+                      Waze
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </li>
