@@ -1,7 +1,7 @@
 # Life OS – run from repo root
 # Prerequisite: PostgreSQL running (locally or via Docker)
 
-.PHONY: setup db test run run-docker stop-docker dev stop-dev test-docker test-api deploy deploy-setup
+.PHONY: setup db test run run-docker stop-docker dev stop-dev test-docker test-api deploy deploy-setup deploy-staging deploy-test
 
 # Install deps and create/migrate DB (requires Postgres)
 setup:
@@ -49,6 +49,20 @@ deploy-setup:
 # Build image, push to GHCR, and deploy to Pi (or whatever target is in config/deploy.yml)
 deploy:
 	set -a && . ./.env && set +a && cd backend && bin/kamal deploy
+
+# Deploy current branch to test environment via GitHub Actions
+deploy-test:
+	git push origin HEAD
+	gh workflow run deploy-test.yml -f branch=$(shell git rev-parse --abbrev-ref HEAD)
+	@echo "Deploying $(shell git rev-parse --abbrev-ref HEAD) → https://test.lifeos.kaizendevs.com"
+	@echo "Track progress: gh run watch"
+
+# Deploy staging branch via GitHub Actions (auto-deploys on push, this is manual trigger)
+deploy-staging:
+	git push origin HEAD
+	gh workflow run deploy-staging.yml
+	@echo "Deploying → https://staging.lifeos.kaizendevs.com"
+	@echo "Track progress: gh run watch"
 
 # Quick API test (requires server running and a user); set TOKEN after sign-in
 test-api:
