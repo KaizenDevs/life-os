@@ -1,7 +1,7 @@
 # Life OS – run from repo root
 # Prerequisite: PostgreSQL running (locally or via Docker)
 
-.PHONY: setup db test run run-docker stop-docker dev stop-dev test-docker test-api
+.PHONY: setup db test run run-docker stop-docker dev stop-dev test-docker test-api deploy deploy-setup
 
 # Install deps and create/migrate DB (requires Postgres)
 setup:
@@ -41,6 +41,14 @@ stop-dev:
 # Run tests inside the dev container
 test-docker:
 	docker compose -f docker-compose.dev.yml exec -e RAILS_ENV=test web bundle exec rspec
+
+# First-time Pi setup: provisions Docker on the server and starts the DB accessory
+deploy-setup:
+	set -a && . ./.env && set +a && cd backend && bin/kamal setup
+
+# Build image, push to GHCR, and deploy to Pi (or whatever target is in config/deploy.yml)
+deploy:
+	set -a && . ./.env && set +a && cd backend && bin/kamal deploy
 
 # Quick API test (requires server running and a user); set TOKEN after sign-in
 test-api:

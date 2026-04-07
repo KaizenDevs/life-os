@@ -3,6 +3,9 @@ Rails.application.routes.draw do
 
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # Serve the React SPA for all non-API routes so client-side routing works
+  get "*path", to: proc { [200, { "Content-Type" => "text/html" }, [Rails.public_path.join("index.html").read]] }, constraints: ->(req) { !req.path.start_with?("/api", "/users", "/up") }
+
   namespace :api do
     namespace :v1 do
       resources :categories, only: [:index, :show, :create, :update, :destroy]

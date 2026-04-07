@@ -1,0 +1,33 @@
+# Git
+.git/
+.gitignore
+
+# Frontend — exclude dev artifacts; source is copied explicitly in Dockerfile
+frontend/node_modules/
+frontend/dist/
+frontend/.env*
+
+# Backend — exclude secrets, logs, tmp, dev artifacts
+backend/.bundle/
+backend/.env*
+backend/config/master.key
+backend/config/credentials/*.key
+backend/log/*
+backend/tmp/*
+!backend/log/.keep
+!backend/tmp/.keep
+backend/tmp/pids/*
+!backend/tmp/pids/.keep
+backend/storage/*
+!backend/storage/.keep
+backend/tmp/storage/*
+!backend/tmp/storage/.keep
+
+# CI / tooling
+.github/
+backend/.github/
+backend/.devcontainer/
+backend/.dockerignore
+backend/Dockerfile*
+backend/config/deploy*.yml
+backend/.kamal/
