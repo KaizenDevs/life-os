@@ -24,12 +24,22 @@ jobs:
           bundler-cache: true
           working-directory: backend
 
-      - name: Set up SSH key
+      - name: Set up SSH via Cloudflare Tunnel
         run: |
+          curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+          sudo apt-get update -qq && sudo apt-get install -y cloudflared
+
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+          cat >> ~/.ssh/config << 'EOF'
+          Host ssh.lifeos.kaizendevs.com
+            ProxyCommand cloudflared access ssh --hostname %h
+            StrictHostKeyChecking no
+            User gh
+          EOF
 
       - name: Deploy
         working-directory: backend
