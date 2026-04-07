@@ -33,7 +33,7 @@ jobs:
 
           cat >> ~/.ssh/config << 'EOF'
           Host ssh.lifeos.kaizendevs.com
-            ProxyCommand cloudflared access ssh --hostname %h
+            ProxyCommand cloudflared access tcp --hostname %h
             StrictHostKeyChecking no
             User gh
           EOF

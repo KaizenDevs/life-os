@@ -7,7 +7,7 @@ servers:
 
 ssh:
   user: gh
-  proxy_command: cloudflared access ssh --hostname %h
+  proxy_command: cloudflared access tcp --hostname %h
 
 registry:
   server: ghcr.io

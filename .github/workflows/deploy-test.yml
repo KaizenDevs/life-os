@@ -38,10 +38,10 @@ jobs:
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          # Route SSH through the Cloudflare Tunnel
+          # Route SSH through the Cloudflare Tunnel (no Access policy needed — SSH key auth handles security)
           cat >> ~/.ssh/config << 'EOF'
           Host ssh.lifeos.kaizendevs.com
-            ProxyCommand cloudflared access ssh --hostname %h
+            ProxyCommand cloudflared access tcp --hostname %h
             StrictHostKeyChecking no
             User gh
           EOF
