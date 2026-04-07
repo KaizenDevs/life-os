@@ -11,50 +11,23 @@ on:
 jobs:
   deploy:
     name: Deploy ${{ github.event.inputs.branch }} to test.lifeos.kaizendevs.com
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1.299.0
-        with:
-          ruby-version: .ruby-version
-          bundler-cache: true
-          working-directory: backend
-
-      - name: Set up SSH via Cloudflare Tunnel
-        run: |
-          # Install cloudflared
-          curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
-          sudo apt-get update -qq && sudo apt-get install -y cloudflared
-
-          # SSH key
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-          # Route SSH through the Cloudflare Tunnel (no Access policy needed — SSH key auth handles security)
-          cat >> ~/.ssh/config << 'EOF'
-          Host ssh.lifeos.kaizendevs.com
-            ProxyCommand cloudflared access tcp --hostname %h
-            StrictHostKeyChecking no
-            User gh
-          EOF
 
       - name: Deploy
         working-directory: backend
         env:
           GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST: 127.0.0.1
           KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY_TEST }}
           DATABASE_URL: ${{ secrets.DATABASE_URL_TEST }}
           DEVISE_JWT_SECRET_KEY: ${{ secrets.DEVISE_JWT_SECRET_KEY_TEST }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD_TEST }}
           APP_VERSION: ${{ github.sha }}
-        run: bundle exec kamal deploy -d test --skip-push
+        run: bundle exec kamal deploy -d test
