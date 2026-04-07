@@ -32,10 +32,10 @@ jobs:
           APP_VERSION: ${{ github.sha }}
         run: |
           docker run --rm \
-            -v "$PWD:/workdir" \
+            -v "${{ github.workspace }}:/workdir" \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v "$HOME/.ssh:/root/.ssh:ro" \
-            -w /workdir \
+            -w /workdir/backend \
             -e GITHUB_USERNAME \
             -e DEPLOY_HOST \
             -e KAMAL_REGISTRY_PASSWORD \
