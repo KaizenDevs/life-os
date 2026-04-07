@@ -32,6 +32,7 @@ jobs:
           APP_VERSION: ${{ github.sha }}
         run: |
           docker run --rm \
+            --network host \
             -v "${{ github.workspace }}:/workdir" \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v "$HOME/.ssh:/root/.ssh:ro" \
