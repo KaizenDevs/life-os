@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { login, AuthError } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 
 export function LoginPage() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const resetSuccess = searchParams.get("reset") === "success";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,6 +39,12 @@ export function LoginPage() {
       <div className="w-full max-w-sm bg-white rounded-2xl shadow p-8">
         <h1 className="text-2xl font-bold text-center mb-6">Life OS</h1>
 
+        {resetSuccess && (
+          <p className="text-green-600 text-sm text-center mb-4">
+            Password updated. Sign in with your new password.
+          </p>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="email"
@@ -67,10 +75,15 @@ export function LoginPage() {
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-4">
+          <Link to="/forgot-password" className="text-blue-600 hover:underline">
+            Forgot password?
+          </Link>
+        </p>
+        <p className="text-center text-sm text-gray-500 mt-2">
           No account?{" "}
-          <a href="/register" className="text-blue-600 hover:underline">
+          <Link to="/register" className="text-blue-600 hover:underline">
             Create one
-          </a>
+          </Link>
         </p>
       </div>
     </div>

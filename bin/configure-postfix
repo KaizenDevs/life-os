@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Configures Postfix as a send-only mail server from env vars.
+# Run on the Pi after setting SMTP_DOMAIN and SMTP_FROM in .env.
+#
+# Required env vars:
+#   SMTP_DOMAIN   — domain used as sender (e.g. kaizendevs.com)
+#
+# Usage:
+#   source .env && sudo -E bin/configure-postfix
+
+set -euo pipefail
+
+SMTP_DOMAIN="${SMTP_DOMAIN:?SMTP_DOMAIN is required}"
+
+cat > /etc/postfix/main.cf << EOF
+smtpd_banner = \$myhostname ESMTP
+biff = no
+append_dot_mydomain = no
+
+# Send-only — loopback only, no incoming mail
+myhostname = ${SMTP_DOMAIN}
+myorigin = ${SMTP_DOMAIN}
+mydestination = localhost
+relayhost =
+inet_interfaces = loopback-only
+inet_protocols = ipv4
+mynetworks = 127.0.0.0/8
+
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_tls_security_level=may
+smtp_tls_security_level=may
+
+mailbox_size_limit = 0
+recipient_delimiter = +
+EOF
+
+systemctl reload postfix
+echo "Postfix configured for domain: ${SMTP_DOMAIN}"

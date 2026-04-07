@@ -7,6 +7,8 @@ import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { HomePage } from "./pages/HomePage";
 import { GroupsPage } from "./pages/GroupsPage";
 import { GroupFormPage } from "./pages/GroupFormPage";
@@ -28,6 +30,8 @@ export default function App() {
             {/* Public */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             {/* Authenticated — all wrapped in Layout (header + nav) */}
             <Route
