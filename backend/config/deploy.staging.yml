@@ -1,0 +1,55 @@
+service: life-os-staging
+image: <%= ENV["GITHUB_USERNAME"] %>/life-os
+
+servers:
+  web:
+    - <%= ENV["DEPLOY_HOST"] %>
+
+ssh:
+  user: gh
+
+registry:
+  server: ghcr.io
+  username: <%= ENV["GITHUB_USERNAME"] %>
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - DATABASE_URL
+    - DEVISE_JWT_SECRET_KEY
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    RAILS_ENV: production
+    APP_ENV: staging
+
+proxy:
+  ssl: false
+  host: staging.lifeos.kaizendevs.com
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+builder:
+  arch: arm64
+  context: ..
+  dockerfile: Dockerfile
+
+# Separate DB for staging — reachable at hostname: life-os-staging-db
+accessories:
+  db:
+    image: postgres:16-alpine
+    host: <%= ENV["DEPLOY_HOST"] %>
+    port: "127.0.0.1:5433:5432"
+    env:
+      clear:
+        POSTGRES_USER: backend
+        POSTGRES_DB: backend_staging
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data

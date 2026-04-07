@@ -7,9 +7,25 @@ import { Toasts } from "./Toasts";
 import { Home, Building2, Settings, Puzzle, LogOut, ChevronDown } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useRef, useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+function useAppVersion() {
+  return useQuery({
+    queryKey: ["version"],
+    queryFn: () => fetch("/api/v1/version").then((r) => r.json()) as Promise<{ version: string; env: string }>,
+    staleTime: Infinity,
+  });
+}
+
+const ENV_COLORS: Record<string, string> = {
+  staging: "bg-yellow-100 text-yellow-700",
+  test: "bg-purple-100 text-purple-700",
+  development: "bg-gray-100 text-gray-500",
+};
 
 export function Layout() {
   const { signOut, currentUser } = useAuth();
+  const { data: versionData } = useAppVersion();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -114,6 +130,18 @@ export function Layout() {
       </main>
 
       <Toasts />
+
+      {/* Version badge */}
+      {versionData && (
+        <div className="hidden md:flex fixed bottom-2 right-3 items-center gap-1.5 text-[11px] text-gray-400">
+          {versionData.env !== "production" && (
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide ${ENV_COLORS[versionData.env] ?? "bg-gray-100 text-gray-500"}`}>
+              {versionData.env}
+            </span>
+          )}
+          <span>{versionData.version.slice(0, 7)}</span>
+        </div>
+      )}
 
       {/* Bottom nav — mobile only */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden">

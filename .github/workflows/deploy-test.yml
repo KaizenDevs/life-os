@@ -1,0 +1,47 @@
+name: Deploy to Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy
+        required: true
+        default: main
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.event.inputs.branch }} to test.lifeos.kaizendevs.com
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1.299.0
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+          working-directory: backend
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        working-directory: backend
+        env:
+          GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY_TEST }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL_TEST }}
+          DEVISE_JWT_SECRET_KEY: ${{ secrets.DEVISE_JWT_SECRET_KEY_TEST }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD_TEST }}
+          APP_VERSION: ${{ github.sha }}
+        run: bundle exec kamal deploy -d test --skip-push
