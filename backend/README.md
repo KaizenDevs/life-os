@@ -30,6 +30,50 @@ bin/rails server
 bundle exec rspec
 ```
 
+## Deployment
+
+The app is deployed to a Raspberry Pi using [Kamal](https://kamal-deploy.org/) and exposed publicly via a Cloudflare Tunnel — no open ports required on the Pi.
+
+### Architecture
+
+```
+Users → HTTPS → Cloudflare (SSL termination) → Cloudflare Tunnel → Raspberry Pi (Kamal/Docker, port 80)
+```
+
+- SSL is terminated at Cloudflare; the tunnel connection uses QUIC.
+- Kamal proxy runs on port 80 and routes traffic to the Rails container.
+- Cloudflared runs as a systemd service on the Pi.
+
+### Prerequisites
+
+- `.env` file at the project root with the required variables (see `.env.example`).
+- `backend/config/master.key` present locally (never committed).
+- `gh auth login` done on the deploy machine (used to pull the GHCR token).
+
+### Deploy
+
+```bash
+cd backend
+kamal deploy
+```
+
+### Useful Kamal aliases
+
+```bash
+kamal app logs -f
+kamal console   # Rails console
+kamal shell     # bash inside the container
+kamal dbc       # database console
+```
+
+### Cloudflare Tunnel
+
+Managed as a systemd service on the Pi. Config lives at `/etc/cloudflared/config.yml`.
+
+```bash
+ssh pi "sudo systemctl status cloudflared"
+```
+
 ## Environment Variables
 
 | Variable | Required | Description |

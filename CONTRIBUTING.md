@@ -33,6 +33,16 @@ Keep branches short-lived and merge often (trunk-based style).
 - Backend: Ruby + PostgreSQL; runs `db:create db:migrate` and `bundle exec rspec` in `backend/`.
 - Fix any failing tests or lint before merging.
 
+## Environment setup
+
+Copy `.env.example` to `.env` and fill in the values before running or deploying:
+
+```bash
+cp .env.example .env
+```
+
+See `backend/README.md` for a full description of each variable and deployment instructions.
+
 ## Running tests locally
 
 ```bash

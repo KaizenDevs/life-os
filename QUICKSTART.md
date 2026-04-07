@@ -69,4 +69,6 @@ curl -X POST http://localhost:3000/api/v1/providers \
 | Stop dev stack             | `make stop-dev`                                      |
 | Run tests (dev stack)      | `docker compose -f docker-compose.dev.yml exec web bundle exec rspec` |
 
-API base URL: **http://localhost:3000**
+Local API base URL: **http://localhost:3000**
+
+> Production is available at **https://lifeos.kaizendevs.com** (deployed to Raspberry Pi via Kamal + Cloudflare Tunnel).
