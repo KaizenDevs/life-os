@@ -30,4 +30,6 @@ jobs:
           DEVISE_JWT_SECRET_KEY: ${{ secrets.DEVISE_JWT_SECRET_KEY_TEST }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD_TEST }}
           APP_VERSION: ${{ github.sha }}
-        run: bundle exec kamal deploy -d test
+        run: |
+          export PATH="$HOME/.rbenv/bin:$HOME/.rbenv/shims:$PATH"
+          bundle exec kamal deploy -d test
