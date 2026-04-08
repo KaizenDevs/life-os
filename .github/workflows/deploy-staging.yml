@@ -28,4 +28,5 @@ jobs:
         run: |
           export PATH="$HOME/.rbenv/bin:$HOME/.rbenv/shims:$PATH"
           bundle install --quiet
+          bundle exec kamal accessory boot db -d staging || true
           bundle exec kamal deploy -d staging
