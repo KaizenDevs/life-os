@@ -31,18 +31,6 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD_TEST }}
           APP_VERSION: ${{ github.sha }}
         run: |
-          docker run --rm \
-            --network host \
-            -v "${{ github.workspace }}:/workdir" \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -v "$HOME/.ssh:/root/.ssh:ro" \
-            -w /workdir/backend \
-            -e GITHUB_USERNAME \
-            -e DEPLOY_HOST \
-            -e KAMAL_REGISTRY_PASSWORD \
-            -e RAILS_MASTER_KEY \
-            -e DATABASE_URL \
-            -e DEVISE_JWT_SECRET_KEY \
-            -e POSTGRES_PASSWORD \
-            -e APP_VERSION \
-            ghcr.io/basecamp/kamal deploy -d test
+          export PATH="$HOME/.rbenv/bin:$HOME/.rbenv/shims:$PATH"
+          bundle install --quiet
+          bundle exec kamal deploy -d test
