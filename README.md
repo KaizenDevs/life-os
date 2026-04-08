@@ -3,6 +3,7 @@
 Daily organizer for day-to-day activities (providers, and more modules later).
 
 - **Backend**: Rails 8 API — `backend/`
+- **Frontend**: React PWA — `frontend/`
 - **Architecture**: [docs/architecture/life-os-providers-api.md](docs/architecture/life-os-providers-api.md)
 - **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md)
 
@@ -56,6 +57,8 @@ bun run dev                  # start Vite dev server on http://localhost:5173
 bun test                     # run frontend tests
 ```
 
+The frontend fetches `/api/v1/version` on boot and logs the current version to the browser console.
+
 ### Pre-commit hook
 
 Before every commit the hook runs **frontend** tests (`bun test`) and **backend** tests (RSpec in the Docker `web` container). The commit is aborted if either fails or if the backend cannot run (Docker not available, daemon down, or `web` not running — start with `docker compose up -d`).
@@ -98,6 +101,13 @@ curl -i -X POST http://localhost:3000/users/sign_in \
   -d '{"user":{"email":"you@example.com","password":"password123"}}'
 ```
 
+**Check version** (public, no token needed):
+
+```bash
+curl http://localhost:3000/api/v1/version
+# {"version":"1.0.1"}
+```
+
 **List providers:**
 
 ```bash
@@ -118,40 +128,49 @@ curl -X POST http://localhost:3000/api/v1/providers \
 
 ## Deployment
 
-The production image is built from `backend/Dockerfile` and served via [Thruster](https://github.com/basecamp/thruster) on port 80.
+The app is deployed to a Raspberry Pi via [Kamal](https://kamal-deploy.org) and served at **https://lifeos.kaizendevs.com**. The image is built from `backend/Dockerfile` (build context: repo root) and served via [Thruster](https://github.com/basecamp/thruster) behind kamal-proxy.
 
-### Required environment variables
+### Environment variables
+
+Copy `.env.example` to `.env` and fill in the values:
+
+```bash
+cp .env.example .env
+```
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | Full Postgres URL, e.g. `postgres://user:pass@host:5432/dbname` |
+| `DEPLOY_HOST` | IP or hostname of the target server |
+| `GITHUB_USERNAME` | GitHub username (for GHCR image registry) |
+| `APP_HOST` | Public hostname, e.g. `lifeos.kaizendevs.com` |
+| `DATABASE_URL` | Full Postgres URL, e.g. `postgres://user:pass@life-os-db/backend_production` |
 | `DEVISE_JWT_SECRET_KEY` | Long random secret for signing JWTs — generate with `openssl rand -hex 64` |
 | `RAILS_MASTER_KEY` | Value from `backend/config/master.key` (never commit this file) |
+| `POSTGRES_PASSWORD` | Password for the managed PostgreSQL accessory |
 
-### Option A: Docker Compose on a VPS
-
-Copy the repo to your server, set the required env vars, and run:
-
-```bash
-DEVISE_JWT_SECRET_KEY=<secret> docker compose up -d
-```
-
-The stack starts PostgreSQL and the Rails app. The app is available on port 3000 (put Nginx or Caddy in front for TLS).
-
-To update after a code change:
+### Deploy
 
 ```bash
-docker compose build web
-docker compose up -d
+make deploy
 ```
 
-### Option B: Kamal
+### Release
 
-The Dockerfile is Kamal-compatible. Add a `config/deploy.yml` (see [Kamal docs](https://kamal-deploy.org)) and deploy with:
+To bump the version, tag, create a GitHub Release, and deploy in one step:
 
 ```bash
-kamal setup   # first time
-kamal deploy  # subsequent deploys
+make release VERSION=1.2.0
 ```
 
-Set secrets in `.kamal/secrets` (never commit this file).
+This will:
+1. Write the new version to `VERSION`
+2. Commit and tag `v1.2.0`
+3. Push to `main` with the tag
+4. Create a GitHub Release with auto-generated notes
+5. Build and deploy to production
+
+### First-time server setup
+
+```bash
+make deploy-setup
+```

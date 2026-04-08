@@ -30,7 +30,8 @@ Keep branches short-lived and merge often (trunk-based style).
 ## CI
 
 - GitHub Actions runs on push and pull requests to `main`.
-- Backend: Ruby + PostgreSQL; runs `db:create db:migrate` and `bundle exec rspec` in `backend/`.
+- Backend: RSpec via Docker.
+- Frontend: `bun test`.
 - Fix any failing tests or lint before merging.
 
 ## Environment setup
@@ -41,14 +42,25 @@ Copy `.env.example` to `.env` and fill in the values before running or deploying
 cp .env.example .env
 ```
 
-See `backend/README.md` for a full description of each variable and deployment instructions.
+See the [Deployment section in README.md](README.md#deployment) for a full description of each variable.
 
 ## Running tests locally
 
 ```bash
-cd backend
-bundle install
-# With PostgreSQL running:
-bin/rails db:create db:migrate
-bundle exec rspec
+# Backend (requires Docker web container running)
+docker compose up -d
+docker compose exec -T -e RAILS_ENV=test web bundle exec rspec
+
+# Frontend
+bun test --cwd frontend
 ```
+
+## Releases
+
+To cut a release:
+
+```bash
+make release VERSION=1.2.0
+```
+
+See [README.md](README.md#release) for details.

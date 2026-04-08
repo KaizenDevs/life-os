@@ -2,7 +2,7 @@
 
 ## Step 1: Start the app
 
-Open a terminal in the project folder and run:
+Copy `.env.example` to `.env` and fill in the values, then:
 
 ```bash
 docker compose up -d
@@ -65,9 +65,13 @@ curl -X POST http://localhost:3000/api/v1/providers \
 | Stop the app               | `docker compose down`                                |
 | View logs                  | `docker compose logs -f web`                         |
 | Start again                | `docker compose up -d`                               |
+| Check version              | `curl http://localhost:3000/api/v1/version`          |
 | **Development** (hot-reload) | `make dev`                                         |
 | Stop dev stack             | `make stop-dev`                                      |
-| Run tests (dev stack)      | `docker compose -f docker-compose.dev.yml exec web bundle exec rspec` |
+| Run backend tests          | `docker compose exec -T -e RAILS_ENV=test web bundle exec rspec` |
+| Run frontend tests         | `bun test --cwd frontend`                            |
+| Deploy to production       | `make deploy`                                        |
+| Release new version        | `make release VERSION=1.2.0`                         |
 
 Local API base URL: **http://localhost:3000**
 
