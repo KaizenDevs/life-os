@@ -58,6 +58,7 @@ release:
 	git diff --cached --quiet || git commit -m "chore: release v$(VERSION)"
 	git tag v$(VERSION)
 	git push origin main --tags
+	gh release create v$(VERSION) --title "v$(VERSION)" --generate-notes
 	$(MAKE) deploy
 
 # Quick API test (requires server running and a user); set TOKEN after sign-in
