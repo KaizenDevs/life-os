@@ -49,7 +49,7 @@ if ! docker compose -f "$COMPOSE_FILE" ps --services --filter status=running 2>/
   exit 1
 fi
 
-if ! docker compose -f "$COMPOSE_FILE" exec -e RAILS_ENV=test -e DATABASE_URL=postgres://postgres:postgres@db:5432/backend_test web bundle exec rspec --format progress; then
+if ! docker compose -f "$COMPOSE_FILE" exec -T -e RAILS_ENV=test -e DATABASE_URL=postgres://postgres:postgres@db:5432/backend_test web bundle exec rspec --format progress; then
   echo -e "\n${RED}✗ Backend tests failed. Commit aborted.${NC}"
   exit 1
 fi

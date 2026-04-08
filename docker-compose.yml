@@ -26,7 +26,7 @@ services:
     environment:
       RAILS_ENV: production
       DATABASE_URL: postgres://postgres:postgres@db:5432/backend_production
-      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:-}
       DEVISE_JWT_SECRET_KEY: ${DEVISE_JWT_SECRET_KEY:-change-me-in-production}
     ports:
       - "3000:80"
