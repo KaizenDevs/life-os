@@ -1,7 +1,7 @@
 # Life OS – run from repo root
 # Prerequisite: PostgreSQL running (locally or via Docker)
 
-.PHONY: setup db test run run-docker stop-docker dev stop-dev test-docker test-api deploy deploy-setup
+.PHONY: setup db test run run-docker stop-docker dev stop-dev test-docker test-api deploy deploy-setup release
 
 # Install deps and create/migrate DB (requires Postgres)
 setup:
@@ -49,6 +49,16 @@ deploy-setup:
 # Build image, push to GHCR, and deploy to Pi (or whatever target is in config/deploy.yml)
 deploy:
 	set -a && . ./.env && set +a && cd backend && bin/kamal deploy
+
+# Bump version, tag, and deploy. Usage: make release VERSION=1.2.0
+release:
+	@test -n "$(VERSION)" || (echo "Usage: make release VERSION=1.2.0" && exit 1)
+	@echo "$(VERSION)" > VERSION
+	git add VERSION
+	git commit -m "chore: release v$(VERSION)"
+	git tag v$(VERSION)
+	git push origin main --tags
+	$(MAKE) deploy
 
 # Quick API test (requires server running and a user); set TOKEN after sign-in
 test-api:
