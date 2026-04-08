@@ -44,11 +44,11 @@ test-docker:
 
 # First-time Pi setup: provisions Docker on the server and starts the DB accessory
 deploy-setup:
-	set -a && . ./.env && set +a && cd backend && bin/kamal setup
+	set -a && . ./.env && set +a && cd backend && rbenv exec bundle exec kamal setup
 
 # Build image, push to GHCR, and deploy to Pi (or whatever target is in config/deploy.yml)
 deploy:
-	set -a && . ./.env && set +a && cd backend && bin/kamal deploy
+	set -a && . ./.env && set +a && cd backend && rbenv exec bundle exec kamal deploy
 
 # Bump version, tag, and deploy. Usage: make release VERSION=1.2.0
 release:
