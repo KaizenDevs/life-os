@@ -1,4 +1,5 @@
 service: life-os
+deploy_timeout: 120
 image: <%= ENV["GITHUB_USERNAME"] %>/life-os
 
 servers:
