@@ -55,7 +55,7 @@ release:
 	@test -n "$(VERSION)" || (echo "Usage: make release VERSION=1.2.0" && exit 1)
 	@echo "$(VERSION)" > VERSION
 	git add VERSION
-	git commit -m "chore: release v$(VERSION)"
+	git diff --cached --quiet || git commit -m "chore: release v$(VERSION)"
 	git tag v$(VERSION)
 	git push origin main --tags
 	$(MAKE) deploy
