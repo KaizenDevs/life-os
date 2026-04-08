@@ -45,6 +45,7 @@ RUN bundle install && \
     bundle exec bootsnap precompile -j 1 --gemfile
 
 COPY backend/ .
+COPY VERSION .
 
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
