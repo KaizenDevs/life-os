@@ -65,6 +65,9 @@ Rails.application.configure do
       authentication: :plain,
       enable_starttls_auto: true
     }
+  else
+    config.action_mailer.delivery_method = :logger
+    config.action_mailer.raise_delivery_errors = false
   end
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
