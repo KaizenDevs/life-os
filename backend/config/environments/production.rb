@@ -56,15 +56,18 @@ Rails.application.configure do
   if ENV["SMTP_ADDRESS"].present?
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.raise_delivery_errors = true
-    config.action_mailer.smtp_settings = {
+    smtp = {
       address: ENV.fetch("SMTP_ADDRESS"),
       port: ENV.fetch("SMTP_PORT", 587).to_i,
-      domain: ENV.fetch("SMTP_DOMAIN"),
-      user_name: ENV.fetch("SMTP_USERNAME"),
-      password: ENV.fetch("SMTP_PASSWORD"),
-      authentication: :plain,
-      enable_starttls_auto: true
+      domain: ENV.fetch("SMTP_DOMAIN")
     }
+    if ENV["SMTP_USERNAME"].present?
+      smtp[:user_name] = ENV["SMTP_USERNAME"]
+      smtp[:password] = ENV["SMTP_PASSWORD"]
+      smtp[:authentication] = :plain
+      smtp[:enable_starttls_auto] = true
+    end
+    config.action_mailer.smtp_settings = smtp
   else
     config.action_mailer.delivery_method = :test
     config.action_mailer.raise_delivery_errors = false
