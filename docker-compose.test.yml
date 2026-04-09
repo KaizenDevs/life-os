@@ -1,0 +1,35 @@
+# Life OS – test stack
+# Run from repo root: docker compose -f docker-compose.test.yml run --rm web
+# Or via Makefile: make test-docker
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    command: bash -c "bin/rails db:prepare && bundle exec rspec"
+    environment:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@db:5432/backend_test
+    volumes:
+      - ./backend:/rails
+      - bundle_gems_test:/usr/local/bundle
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  bundle_gems_test:

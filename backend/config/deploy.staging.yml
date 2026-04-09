@@ -1,0 +1,29 @@
+servers:
+  web:
+    - <%= ENV["STAGING_HOST"] %>
+
+proxy:
+  ssl: false
+  host: <%= ENV["STAGING_DOMAIN"] %>
+
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - DATABASE_URL
+    - DEVISE_JWT_SECRET_KEY
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+
+accessories:
+  staging-db:
+    image: postgres:16-alpine
+    host: <%= ENV["STAGING_HOST"] %>
+    port: "127.0.0.1:5433:5432"
+    env:
+      clear:
+        POSTGRES_USER: backend
+        POSTGRES_DB: backend_staging
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data

@@ -1,7 +1,7 @@
 # Life OS – run from repo root
 # Prerequisite: PostgreSQL running (locally or via Docker)
 
-.PHONY: setup db test run run-docker stop-docker dev stop-dev test-docker test-api deploy deploy-setup release
+.PHONY: setup db test run run-docker stop-docker dev stop-dev test-docker test-docker-clean test-api deploy deploy-staging deploy-test release
 
 # Install deps and create/migrate DB (requires Postgres)
 setup:
@@ -38,17 +38,46 @@ dev:
 stop-dev:
 	docker compose -f docker-compose.dev.yml down
 
-# Run tests inside the dev container
+# Run tests in an isolated test environment (ephemeral DB via tmpfs)
 test-docker:
-	docker compose -f docker-compose.dev.yml exec -e RAILS_ENV=test web bundle exec rspec
+	docker compose -f docker-compose.test.yml run --rm web
 
-# First-time Pi setup: provisions Docker on the server and starts the DB accessory
-deploy-setup:
-	set -a && . ./.env && set +a && cd backend && rbenv exec bundle exec kamal setup
+# Tear down test stack and remove volumes
+test-docker-clean:
+	docker compose -f docker-compose.test.yml down -v
 
-# Build image, push to GHCR, and deploy to Pi (or whatever target is in config/deploy.yml)
+# Build image, push to GHCR, and deploy to Pi.
+# Auto-detects if first-time setup is needed: runs `kamal setup` if the app
+# container isn't found on the server, otherwise runs `kamal deploy`.
 deploy:
-	set -a && . ./.env && set +a && cd backend && rbenv exec bundle exec kamal deploy
+	set -a && . ./.env && set +a && cd backend && \
+	  if rbenv exec bundle exec kamal app details 2>/dev/null | grep -q "App"; then \
+	    rbenv exec bundle exec kamal deploy; \
+	  else \
+	    rbenv exec bundle exec kamal setup; \
+	  fi
+
+# Deploy to staging environment.
+# Same auto-detect logic as `deploy`: setup on first run, deploy on subsequent runs.
+# DATABASE_URL is overridden with STAGING_DATABASE_URL so Kamal injects the correct value.
+deploy-staging:
+	set -a && . ./.env && set +a && export DATABASE_URL=$$STAGING_DATABASE_URL && cd backend && \
+	  if rbenv exec bundle exec kamal app details -d staging 2>/dev/null | grep -q "App"; then \
+	    rbenv exec bundle exec kamal deploy -d staging; \
+	  else \
+	    rbenv exec bundle exec kamal setup -d staging; \
+	  fi
+
+# Deploy to test environment.
+# Same auto-detect logic as `deploy`: setup on first run, deploy on subsequent runs.
+# DATABASE_URL is overridden with TEST_DATABASE_URL so Kamal injects the correct value.
+deploy-test:
+	set -a && . ./.env && set +a && export DATABASE_URL=$$TEST_DATABASE_URL && cd backend && \
+	  if rbenv exec bundle exec kamal app details -d test 2>/dev/null | grep -q "App"; then \
+	    rbenv exec bundle exec kamal deploy -d test; \
+	  else \
+	    rbenv exec bundle exec kamal setup -d test; \
+	  fi
 
 # Bump version, tag, and deploy. Usage: make release VERSION=1.2.0
 release:
