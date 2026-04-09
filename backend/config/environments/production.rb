@@ -66,7 +66,7 @@ Rails.application.configure do
       enable_starttls_auto: true
     }
   else
-    config.action_mailer.delivery_method = :logger
+    config.action_mailer.delivery_method = :test
     config.action_mailer.raise_delivery_errors = false
   end
 
