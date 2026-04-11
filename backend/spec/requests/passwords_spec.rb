@@ -30,6 +30,36 @@ RSpec.describe "Password Reset", type: :request do
     end
   end
 
+  describe "POST /users/password rate limiting" do
+    before { Rack::Attack.cache.store.clear }
+
+    it "allows requests up to the limit" do
+      Rack::Attack::PASSWORD_RESET_LIMIT.times do
+        post user_password_path, params: { user: { email: "anyone@example.com" } }, as: :json
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    it "returns 429 after exceeding the limit by IP" do
+      Rack::Attack::PASSWORD_RESET_LIMIT.times do
+        post user_password_path, params: { user: { email: "anyone@example.com" } }, as: :json
+      end
+
+      post user_password_path, params: { user: { email: "anyone@example.com" } }, as: :json
+      expect(response).to have_http_status(429)
+      expect(response.parsed_body["error"]).to be_present
+    end
+
+    it "returns 429 after exceeding the limit by email" do
+      Rack::Attack::PASSWORD_RESET_LIMIT.times do
+        post user_password_path, params: { user: { email: "target@example.com" } }, as: :json
+      end
+
+      post user_password_path, params: { user: { email: "target@example.com" } }, as: :json
+      expect(response).to have_http_status(429)
+    end
+  end
+
   describe "PUT /users/password (reset password)" do
     let(:user) { create(:user) }
     let(:token) { user.send_reset_password_instructions }
