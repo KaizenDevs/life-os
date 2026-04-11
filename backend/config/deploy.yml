@@ -20,8 +20,15 @@ env:
     - RAILS_MASTER_KEY
     - DATABASE_URL
     - DEVISE_JWT_SECRET_KEY
+    - SMTP_USERNAME
+    - SMTP_PASSWORD
   clear:
     SOLID_QUEUE_IN_PUMA: true
+    APP_HOST: lifeos.kaizendevs.com
+    SMTP_FROM: noreply@lifeos.kaizendevs.com
+    SMTP_DOMAIN: lifeos.kaizendevs.com
+    SMTP_ADDRESS: <%= ENV["SMTP_ADDRESS"] %>
+    SMTP_PORT: 587
 
 proxy:
   ssl: false

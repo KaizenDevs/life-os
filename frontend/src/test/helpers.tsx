@@ -12,7 +12,7 @@ interface CurrentUser {
 }
 
 interface RenderOptions {
-  initialEntries?: string[];
+  initialEntries?: (string | { pathname: string; state?: unknown })[];
   authToken?: string | null;
   currentUser?: CurrentUser | null;
 }
