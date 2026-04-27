@@ -11,6 +11,7 @@ FROM oven/bun:1-alpine AS frontend-build
 WORKDIR /app
 COPY frontend/package.json frontend/bun.lock* ./
 RUN bun install --frozen-lockfile
+COPY VERSION .
 COPY frontend/ .
 RUN bunx vite build
 
