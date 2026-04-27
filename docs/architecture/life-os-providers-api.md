@@ -9,7 +9,7 @@ This document is the **source of truth** for the life-os backend: an API-only Ra
 - **Authentication**: Devise + devise-jwt (stateless JWT, revocation via JTI).
 - **Authorization**: Pundit — role-based, two-tier (system role + group membership role).
 - **Rate limiting**: Rack::Attack — throttles abuse-prone endpoints (e.g. password reset).
-- **Email**: Action Mailer over SMTP; configured via env vars (see [Email](#email)).
+- **Email**: Action Mailer with `MailerFailover` — SMTP2GO primary, SendPulse fallback, auto-switches on error (see [Email](#email)).
 - **Testing**: RSpec, FactoryBot, Shoulda Matchers.
 - **CI**: GitHub Actions (root `.github/workflows/ci.yml`) runs backend tests with a Postgres service.
 
@@ -75,21 +75,36 @@ Requests over the limit receive `429 Too Many Requests` with a JSON error body.
 
 ## Email
 
-Email is sent via Action Mailer over SMTP. Configuration is driven entirely by env vars:
+Email delivery uses `MailerFailover` — tries providers in priority order, skips to next on any SMTP/network error.
+
+### Providers
+
+| Priority | Service | Env vars |
+|----------|---------|---------|
+| 1 (primary) | SMTP2GO | `SMTP2GO_USERNAME`, `SMTP2GO_PASSWORD` |
+| 2 (fallback) | SendPulse | `SENDPULSE_USERNAME`, `SENDPULSE_PASSWORD` |
+
+Registry lives in `lib/external_services.rb`. Add new providers there.
+
+### Other env vars
 
 | Env var | Required | Description |
 |---------|----------|-------------|
-| `SMTP_ADDRESS` | Yes (for live delivery) | SMTP server hostname |
-| `SMTP_PORT` | No (default: 587) | SMTP port |
-| `SMTP_DOMAIN` | Yes | HELO domain |
-| `SMTP_USERNAME` | No | SMTP auth username (omit for unauthenticated relay) |
-| `SMTP_PASSWORD` | No | SMTP auth password |
 | `SMTP_FROM` | Yes | From address on outbound emails |
+| `SMTP_DOMAIN` | Yes | HELO domain |
 | `APP_HOST` | No (default: `lifeos.kaizendevs.com`) | Host used in mailer link generation |
 
-If `SMTP_ADDRESS` is not set, the app falls back to `:test` delivery (emails are not sent, silently collected in `ActionMailer::Base.deliveries`).
+If neither provider is configured, falls back to `:test` delivery (no emails sent).
 
-Compatible with any standard SMTP provider: AWS SES, Postmark, SendGrid, Mailgun, or a self-hosted relay.
+### Status endpoint
+
+`GET /api/v1/services` — returns all configured external services and their status. Requires authentication.
+
+### Adding a new provider
+
+1. Add entry to `ExternalServices::REGISTRY` in `lib/external_services.rb` with a unique key, `type: :email`, and `priority`.
+2. Add the secret env vars to `config/deploy.yml` under `env.secret`.
+3. Set the secrets on the server: `kamal secrets set NEWPROVIDER_USERNAME=... NEWPROVIDER_PASSWORD=...`.
 
 ## API (all under `/api/v1`, all require `Authorization: Bearer <token>`)
 

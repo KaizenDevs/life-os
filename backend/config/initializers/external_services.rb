@@ -1,0 +1,1 @@
+require "mailer_failover"

@@ -1,4 +1,6 @@
 class DeviseMailer < Devise::Mailer
+  default from: ENV.fetch("SMTP_FROM", "noreply@kaizendevs.com")
+
   def reset_password_instructions(record, token, opts = {})
     @token = token
     @resource = record

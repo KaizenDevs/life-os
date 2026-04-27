@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require_relative "../../lib/external_services"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -53,21 +54,15 @@ Rails.application.configure do
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "lifeos.kaizendevs.com"), protocol: "https" }
-  if ENV["SMTP_ADDRESS"].present?
+
+  primary_settings = ExternalServices.smtp_settings_for(:smtp_primary)
+  fallback_settings = ExternalServices.smtp_settings_for(:smtp_fallback)
+
+  if primary_settings || fallback_settings
+    # Boot with primary; MailerFailover handles runtime switching
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.raise_delivery_errors = true
-    smtp = {
-      address: ENV.fetch("SMTP_ADDRESS"),
-      port: ENV.fetch("SMTP_PORT", 587).to_i,
-      domain: ENV.fetch("SMTP_DOMAIN")
-    }
-    if ENV["SMTP_USERNAME"].present?
-      smtp[:user_name] = ENV["SMTP_USERNAME"]
-      smtp[:password] = ENV["SMTP_PASSWORD"]
-      smtp[:authentication] = :plain
-      smtp[:enable_starttls_auto] = true
-    end
-    config.action_mailer.smtp_settings = smtp
+    config.action_mailer.smtp_settings = primary_settings || fallback_settings
   else
     config.action_mailer.delivery_method = :test
     config.action_mailer.raise_delivery_errors = false
