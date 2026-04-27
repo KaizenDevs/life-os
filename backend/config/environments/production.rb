@@ -55,14 +55,13 @@ Rails.application.configure do
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "lifeos.kaizendevs.com"), protocol: "https" }
 
-  primary_settings = ExternalServices.smtp_settings_for(:smtp_primary)
-  fallback_settings = ExternalServices.smtp_settings_for(:smtp_fallback)
+  any_provider_configured = ExternalServices.active_smtp_providers.any? { |p| p[:configured] }
 
-  if primary_settings || fallback_settings
-    # Boot with primary; MailerFailover handles runtime switching
-    config.action_mailer.delivery_method = :smtp
+  if any_provider_configured
+    require "mailer_failover"
+    ActionMailer::Base.add_delivery_method :mailer_failover, MailerFailover
+    config.action_mailer.delivery_method = :mailer_failover
     config.action_mailer.raise_delivery_errors = true
-    config.action_mailer.smtp_settings = primary_settings || fallback_settings
   else
     config.action_mailer.delivery_method = :test
     config.action_mailer.raise_delivery_errors = false
