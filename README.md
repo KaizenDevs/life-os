@@ -144,9 +144,15 @@ cp .env.example .env
 | `GITHUB_USERNAME` | GitHub username (for GHCR image registry) |
 | `APP_HOST` | Public hostname, e.g. `lifeos.kaizendevs.com` |
 | `DATABASE_URL` | Full Postgres URL, e.g. `postgres://user:pass@life-os-db/backend_production` |
-| `DEVISE_JWT_SECRET_KEY` | Long random secret for signing JWTs — generate with `openssl rand -hex 64` |
+| `DEVISE_JWT_SECRET_KEY` | Long random secret for signing JWTs — `openssl rand -hex 64` |
 | `RAILS_MASTER_KEY` | Value from `backend/config/master.key` (never commit this file) |
 | `POSTGRES_PASSWORD` | Password for the managed PostgreSQL accessory |
+| `SMTP_FROM` | From address on outbound emails, e.g. `noreply@yourdomain.com` |
+| `SMTP_DOMAIN` | HELO domain for SMTP — usually matches `APP_HOST` |
+| `SMTP2GO_USERNAME` | SMTP2GO SMTP user (primary email provider) |
+| `SMTP2GO_PASSWORD` | SMTP2GO SMTP password |
+| `SENDPULSE_USERNAME` | SendPulse SMTP login (fallback email provider) |
+| `SENDPULSE_PASSWORD` | SendPulse SMTP password |
 
 ### Deploy
 

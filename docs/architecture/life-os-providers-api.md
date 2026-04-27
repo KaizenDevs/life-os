@@ -90,15 +90,15 @@ Registry lives in `lib/external_services.rb`. Add new providers there.
 
 | Env var | Required | Description |
 |---------|----------|-------------|
-| `SMTP_FROM` | Yes | From address on outbound emails |
-| `SMTP_DOMAIN` | Yes | HELO domain |
-| `APP_HOST` | No (default: `lifeos.kaizendevs.com`) | Host used in mailer link generation |
+| `SMTP_FROM` | Yes | From address on outbound emails (e.g. `noreply@yourdomain.com`) |
+| `SMTP_DOMAIN` | Yes | HELO domain — usually matches `APP_HOST` |
+| `APP_HOST` | Yes | Hostname used in mailer link generation |
 
 If neither provider is configured, falls back to `:test` delivery (no emails sent).
 
 ### Status endpoint
 
-`GET /api/v1/services` — returns all configured external services and their status. Requires authentication.
+`GET /api/v1/services` — returns all configured email providers and their status. Requires `super_admin` role.
 
 ### Adding a new provider
 
