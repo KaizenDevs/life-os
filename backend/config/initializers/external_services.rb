@@ -1,1 +1,1 @@
-require "mailer_failover"
+require "external_services"

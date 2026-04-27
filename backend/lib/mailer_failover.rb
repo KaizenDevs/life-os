@@ -38,8 +38,7 @@ class MailerFailover
       next unless smtp_settings
 
       begin
-        mail.delivery_method(:smtp, smtp_settings)
-        mail.deliver!
+        Mail::SMTP.new(smtp_settings).deliver!(mail)
         Rails.logger.info("[MailerFailover] Delivered via #{provider[:name]}")
         return
       rescue *SMTP_ERRORS => e
