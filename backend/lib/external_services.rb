@@ -51,4 +51,11 @@ module ExternalServices
             .sort_by { |_, v| v[:priority] }
             .map { |key, svc| { key: key, configured: configured?(key), **svc.except(:env_username, :env_password) } }
   end
+
+  # Returns [[key, name], ...] in priority order — for delivery loops that call smtp_settings_for directly.
+  def self.smtp_providers_in_order
+    REGISTRY.select { |_, v| v[:type] == :email }
+            .sort_by { |_, v| v[:priority] }
+            .map { |key, svc| [ key, svc[:name] ] }
+  end
 end

@@ -23,30 +23,27 @@ class MailerFailover
   end
 
   def deliver!(mail)
-    providers = ExternalServices.active_smtp_providers
-                                .select { |p| p[:configured] }
-
-    if providers.empty?
-      Rails.logger.warn("[MailerFailover] No SMTP providers configured — skipping delivery")
-      return
-    end
-
     last_error = nil
+    delivered = false
 
-    providers.each do |provider|
-      smtp_settings = ExternalServices.smtp_settings_for(provider[:key])
+    ExternalServices.smtp_providers_in_order.each do |key, name|
+      smtp_settings = ExternalServices.smtp_settings_for(key)
       next unless smtp_settings
 
       begin
         Mail::SMTP.new(smtp_settings).deliver!(mail)
-        Rails.logger.info("[MailerFailover] Delivered via #{provider[:name]}")
+        Rails.logger.info("[MailerFailover] Delivered via #{name}")
+        delivered = true
         return
       rescue *SMTP_ERRORS => e
-        Rails.logger.error("[MailerFailover] #{provider[:name]} failed: #{e.class} — #{e.message}")
+        Rails.logger.error("[MailerFailover] #{name} failed: #{e.class} — #{e.message}")
         last_error = e
       end
     end
 
-    raise last_error || Net::SMTPFatalError.new("All SMTP providers exhausted")
+    unless delivered
+      Rails.logger.warn("[MailerFailover] No SMTP providers configured — skipping delivery") unless last_error
+      raise last_error || Net::SMTPFatalError.new("All SMTP providers exhausted")
+    end
   end
 end

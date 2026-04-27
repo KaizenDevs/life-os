@@ -11,9 +11,7 @@ class DeviseMailer < Devise::Mailer
   private
 
   def frontend_base_url
-    host = Rails.application.config.action_mailer.default_url_options[:host]
-    protocol = Rails.application.config.action_mailer.default_url_options[:protocol] || "http"
-    port = Rails.application.config.action_mailer.default_url_options[:port]
-    port ? "#{protocol}://#{host}:#{port}" : "#{protocol}://#{host}"
+    opts = Rails.application.config.action_mailer.default_url_options
+    URI::Generic.build(scheme: opts[:protocol] || "http", host: opts[:host], port: opts[:port]).to_s
   end
 end
