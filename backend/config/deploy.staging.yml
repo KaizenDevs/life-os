@@ -11,8 +11,15 @@ env:
     - RAILS_MASTER_KEY
     - DATABASE_URL
     - DEVISE_JWT_SECRET_KEY
+    - SMTP2GO_USERNAME
+    - SMTP2GO_PASSWORD
+    - SENDPULSE_USERNAME
+    - SENDPULSE_PASSWORD
   clear:
     SOLID_QUEUE_IN_PUMA: true
+    APP_HOST: <%= ENV["STAGING_DOMAIN"] %>
+    SMTP_FROM: noreply@<%= ENV["STAGING_DOMAIN"] %>
+    SMTP_DOMAIN: <%= ENV["STAGING_DOMAIN"] %>
 
 accessories:
   staging-db:

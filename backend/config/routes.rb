@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  devise_for :users, controllers: { sessions: "users/sessions", registrations: "users/registrations" }
+  devise_for :users, controllers: { sessions: "users/sessions", registrations: "users/registrations", passwords: "users/passwords" }
 
   get "up" => "rails/health#show", as: :rails_health_check
 
@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "version", to: "version#show"
+      get "services", to: "services#index"
       resources :categories, only: [:index, :show, :create, :update, :destroy]
       resources :users, only: [:index]
       resources :life_os_modules, only: [:index, :update]

@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { login, AuthError } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 
 export function LoginPage() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const notice = (location.state as { notice?: string } | null)?.notice ?? "";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,6 +39,8 @@ export function LoginPage() {
       <div className="w-full max-w-sm bg-white rounded-2xl shadow p-8">
         <h1 className="text-2xl font-bold text-center mb-6">Life OS</h1>
 
+        {notice && <p className="text-green-600 text-sm text-center mb-2">{notice}</p>}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="email"
@@ -56,6 +60,12 @@ export function LoginPage() {
           />
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          <div className="text-right">
+            <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+              Forgot password?
+            </a>
+          </div>
 
           <button
             type="submit"

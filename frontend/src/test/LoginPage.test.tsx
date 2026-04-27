@@ -63,6 +63,19 @@ describe("LoginPage", () => {
     );
   });
 
+  it("renders forgot password link", () => {
+    renderWithProviders(<LoginPage />, { authToken: null });
+    expect(screen.getByRole("link", { name: /forgot password/i })).toBeInTheDocument();
+  });
+
+  it("shows success notice when redirected from reset password", () => {
+    renderWithProviders(<LoginPage />, {
+      authToken: null,
+      initialEntries: [{ pathname: "/login", state: { notice: "Password updated. Please sign in." } }],
+    });
+    expect(screen.getByText(/password updated/i)).toBeInTheDocument();
+  });
+
   it("disables button while loading", async () => {
     mockLogin.mockImplementation(
       () => new Promise((resolve) => setTimeout(() => resolve("tok"), 500))

@@ -1,4 +1,4 @@
-// Auth API calls — login and registration
+// Auth API calls — login, registration, and password reset
 
 export class AuthError extends Error {
   constructor(message: string, public status: number) {
@@ -43,4 +43,40 @@ export async function register(
   if (!token) throw new AuthError("No token received", response.status);
 
   return token;
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  const response = await fetch("/users/password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user: { email } }),
+  });
+
+  if (!response.ok) {
+    throw new AuthError("Request failed", response.status);
+  }
+}
+
+export async function resetPassword(
+  token: string,
+  password: string,
+  passwordConfirmation: string
+): Promise<void> {
+  const response = await fetch("/users/password", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user: {
+        reset_password_token: token,
+        password,
+        password_confirmation: passwordConfirmation,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const message = body.errors?.[0] ?? "Password reset failed";
+    throw new AuthError(message, response.status);
+  }
 }

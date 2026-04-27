@@ -76,9 +76,20 @@ ssh pi "sudo systemctl status cloudflared"
 
 ## Environment Variables
 
+See `.env.example` at the repo root for the full list with comments. Key variables:
+
 | Variable | Required | Description |
 |---|---|---|
-| `DEVISE_JWT_SECRET_KEY` | Production only | JWT signing secret |
-| `BACKEND_DATABASE_PASSWORD` | Production only | PostgreSQL password |
-| `CORS_ORIGINS` | No | Comma-separated allowed origins (default: `localhost:3000`) |
-| `DATABASE_URL` | No | Full PostgreSQL connection URL |
+| `RAILS_MASTER_KEY` | Yes | Contents of `config/master.key` — never commit |
+| `DEVISE_JWT_SECRET_KEY` | Yes | JWT signing secret — `openssl rand -hex 64` |
+| `DATABASE_URL` | Yes | Full PostgreSQL connection URL |
+| `POSTGRES_PASSWORD` | Yes | Password for the Kamal PostgreSQL accessory |
+| `APP_HOST` | Yes | Public hostname used in email links |
+| `SMTP_FROM` | Yes | From address on outbound emails |
+| `SMTP_DOMAIN` | Yes | HELO domain for SMTP |
+| `SMTP2GO_USERNAME` | Yes (email) | SMTP2GO SMTP user (primary provider) |
+| `SMTP2GO_PASSWORD` | Yes (email) | SMTP2GO SMTP password |
+| `SENDPULSE_USERNAME` | No | SendPulse SMTP login (fallback provider) |
+| `SENDPULSE_PASSWORD` | No | SendPulse SMTP password |
+| `PASSWORD_RESET_MAX_REQUESTS` | No | Rate limit window count (default: 5) |
+| `PASSWORD_RESET_PERIOD_SECONDS` | No | Rate limit window in seconds (default: 1200) |

@@ -43,5 +43,7 @@ module Backend
 
     require_relative "../app/middleware/jwt_decode_error_handler"
     config.middleware.insert_before Warden::Manager, JwtDecodeErrorHandler
+
+    config.middleware.use Rack::Attack
   end
 end

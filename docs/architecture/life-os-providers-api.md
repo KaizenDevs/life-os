@@ -8,6 +8,8 @@ This document is the **source of truth** for the life-os backend: an API-only Ra
 - **Database**: PostgreSQL in its own Docker container when using Docker; otherwise local Postgres.
 - **Authentication**: Devise + devise-jwt (stateless JWT, revocation via JTI).
 - **Authorization**: Pundit — role-based, two-tier (system role + group membership role).
+- **Rate limiting**: Rack::Attack — throttles abuse-prone endpoints (e.g. password reset).
+- **Email**: Action Mailer with `MailerFailover` — SMTP2GO primary, SendPulse fallback, auto-switches on error (see [Email](#email)).
 - **Testing**: RSpec, FactoryBot, Shoulda Matchers.
 - **CI**: GitHub Actions (root `.github/workflows/ci.yml`) runs backend tests with a Postgres service.
 
@@ -52,6 +54,57 @@ Every API response is scoped to the current user. Users never see data outside t
 - **Sign out**: `DELETE /users/sign_out` with `Authorization: Bearer <jwt>`.
 - **Sign up**: `POST /users` with `{ user: { email, password, password_confirmation } }`.
 - JWT secret: set `DEVISE_JWT_SECRET_KEY` in production; dev/test fall back to `secret_key_base`.
+
+### Password reset
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/users/password` | Request a reset link. Always returns 200 (no email enumeration). |
+| PUT | `/users/password` | Submit new password with the token from the email. |
+
+Reset tokens expire per Devise defaults. The same token cannot be used twice.
+
+**Abuse prevention (Rack::Attack):** The `POST /users/password` endpoint is throttled by both IP and email address. Defaults: 5 requests per 20 minutes. Configurable via env vars:
+
+| Env var | Default | Description |
+|---------|---------|-------------|
+| `PASSWORD_RESET_MAX_REQUESTS` | `5` | Max requests per window |
+| `PASSWORD_RESET_PERIOD_SECONDS` | `1200` | Window size in seconds (20 min) |
+
+Requests over the limit receive `429 Too Many Requests` with a JSON error body.
+
+## Email
+
+Email delivery uses `MailerFailover` — tries providers in priority order, skips to next on any SMTP/network error.
+
+### Providers
+
+| Priority | Service | Env vars |
+|----------|---------|---------|
+| 1 (primary) | SMTP2GO | `SMTP2GO_USERNAME`, `SMTP2GO_PASSWORD` |
+| 2 (fallback) | SendPulse | `SENDPULSE_USERNAME`, `SENDPULSE_PASSWORD` |
+
+Registry lives in `lib/external_services.rb`. Add new providers there.
+
+### Other env vars
+
+| Env var | Required | Description |
+|---------|----------|-------------|
+| `SMTP_FROM` | Yes | From address on outbound emails (e.g. `noreply@yourdomain.com`) |
+| `SMTP_DOMAIN` | Yes | HELO domain — usually matches `APP_HOST` |
+| `APP_HOST` | Yes | Hostname used in mailer link generation |
+
+If neither provider is configured, falls back to `:test` delivery (no emails sent).
+
+### Status endpoint
+
+`GET /api/v1/services` — returns all configured email providers and their status. Requires `super_admin` role.
+
+### Adding a new provider
+
+1. Add entry to `ExternalServices::REGISTRY` in `lib/external_services.rb` with a unique key, `type: :email`, and `priority`.
+2. Add the secret env vars to `config/deploy.yml` under `env.secret`.
+3. Set the secrets on the server: `kamal secrets set NEWPROVIDER_USERNAME=... NEWPROVIDER_PASSWORD=...`.
 
 ## API (all under `/api/v1`, all require `Authorization: Bearer <token>`)
 
@@ -103,10 +156,43 @@ Membership attributes: `role` (admin, member, viewer), `accepted_at`, `invited_b
 
 ## Docker
 
-- **docker-compose** (repo root): `web` (Rails) + `db` (Postgres 16), named volume `postgres_data`.
-- Only port 3000 is exposed to the host; Postgres is internal.
-- Build: `docker compose build`. Run: `docker compose up -d`.
-- On Raspberry Pi: use the same compose file; images support ARM64.
+Three compose files serve different purposes:
+
+| File | Purpose | RAILS_ENV |
+|------|---------|-----------|
+| `docker-compose.yml` | Production / Raspberry Pi deploy | `production` |
+| `docker-compose.dev.yml` | Local development with live code reload | `development` |
+| `docker-compose.test.yml` | Run the full test suite in CI or locally | `test` |
+
+### Production (`docker-compose.yml`)
+
+`web` (Rails via Thruster) + `db` (Postgres 16). Named volume `postgres_data`. Only port 3000 is exposed to the host; Postgres is internal.
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+### Development (`docker-compose.dev.yml`)
+
+Mounts `./backend` as a volume so code changes are reflected without rebuild. Exposes port 3000.
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+### Test (`docker-compose.test.yml`)
+
+Runs `bundle exec rspec` in an isolated container with `RAILS_ENV=test` and an in-memory Postgres via tmpfs. Use this to run tests — do not run `rspec` inside the production container.
+
+```bash
+docker compose -f docker-compose.test.yml run --rm web
+```
+
+### RAILS_ENV conventions
+
+- **Production and staging** both use `RAILS_ENV=production`. Staging is differentiated by its env vars (`DATABASE_URL`, `DEVISE_JWT_SECRET_KEY`, `SMTP_*`), not by a separate Rails environment.
+- **Tests** must run with `RAILS_ENV=test`. The production container has `RAILS_ENV=production` baked in — running `rspec` inside it via `docker compose exec web` will use the wrong environment. Always use the test compose file.
 
 ## Adding a new module
 
