@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ── config ────────────────────────────────────────────────────────────────────
+COMPOSE_FILE="docker-compose.dev.yml"
+
 # ── colors ────────────────────────────────────────────────────────────────────
 RESET="\033[0m"
 BOLD="\033[1m"
@@ -56,7 +59,7 @@ print_header() {
 # ── run with spinner ──────────────────────────────────────────────────────────
 run_cmd() {
   local title="$1"; shift
-  gum spin --spinner dot --title " ${title}" -- bash -c "$1" _ "${@:2}"
+  gum spin --spinner dot --title " ${title}" -- "$@"
 }
 
 # ── confirm prompt ────────────────────────────────────────────────────────────
@@ -109,10 +112,10 @@ menu_db() {
     "← back")
 
   case "$action" in
-    migrate*)  run_cmd "Migrating..." "docker compose -f docker-compose.dev.yml exec web bin/rails db:create db:migrate" ;;
-    console*)  docker compose -f docker-compose.dev.yml exec web bin/rails dbconsole ;;
-    seed*)     run_cmd "Seeding..." "docker compose -f docker-compose.dev.yml exec web bin/rails db:seed" ;;
-    reset*)    confirm "Reset DB? All data lost." && run_cmd "Resetting..." "docker compose -f docker-compose.dev.yml exec web bin/rails db:drop db:create db:migrate db:seed" ;;
+    migrate*)  run_cmd "Migrating..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:create db:migrate ;;
+    console*)  docker compose -f "$COMPOSE_FILE" exec web bin/rails dbconsole ;;
+    seed*)     run_cmd "Seeding..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:seed ;;
+    reset*)    confirm "Reset DB? All data lost." && run_cmd "Resetting..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:drop db:create db:migrate db:seed ;;
     *back*)    return ;;
   esac
 }
@@ -128,9 +131,9 @@ menu_logs() {
     "← back")
 
   case "$service" in
-    "all services")  docker compose -f docker-compose.dev.yml logs -f ;;
-    "web"*)          docker compose -f docker-compose.dev.yml logs -f web ;;
-    "db"*)           docker compose -f docker-compose.dev.yml logs -f db ;;
+    "all services")  docker compose -f "$COMPOSE_FILE" logs -f ;;
+    "web"*)          docker compose -f "$COMPOSE_FILE" logs -f web ;;
+    "db"*)           docker compose -f "$COMPOSE_FILE" logs -f db ;;
     *back*)          return ;;
   esac
 }
@@ -161,14 +164,14 @@ main_menu() {
 
     case "$key" in
       1)  echo -e "\n  ${GREEN}▶ starting dev stack...${RESET}\n"
-          docker compose -f docker-compose.dev.yml up ;;
+          docker compose -f "$COMPOSE_FILE" up ;;
       2)  echo -e "\n  ${GREEN}◎ running tests...${RESET}\n"
           make test-docker ;;
       3)  menu_deploy ;;
       4)  menu_release ;;
       5)  menu_db ;;
       6)  menu_logs ;;
-      7)  run_cmd "halting dev stack..." "docker compose -f docker-compose.dev.yml down"
+      7)  run_cmd "halting dev stack..." docker compose -f "$COMPOSE_FILE" down
           echo -e "\n  ${GREEN}■ stopped.${RESET}" ;;
       0)  echo -e "\n  ${DIM}bye${RESET}\n"; exit 0 ;;
       *)  echo -e "  ${RED}unknown key '${key}' — try again${RESET}" ;;

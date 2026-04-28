@@ -61,14 +61,20 @@ if [[ -f "$ROOT/package.json" ]]; then
   bun install --cwd "$ROOT" --silent
   echo -e "  ${GREEN}✓${NC} Root packages installed"
 fi
-bun install --cwd "$ROOT/frontend" --silent
-echo -e "  ${GREEN}✓${NC} Frontend packages installed"
+if [[ -d "$ROOT/frontend" ]]; then
+  bun install --cwd "$ROOT/frontend" --silent
+  echo -e "  ${GREEN}✓${NC} Frontend packages installed"
+fi
 echo ""
 
 # ── Docker images ──────────────────────────────────────────────────────────────
 echo -e "${YELLOW}Pulling Docker images...${NC}\n"
-docker compose -f "$ROOT/docker-compose.dev.yml" pull --quiet
-echo -e "  ${GREEN}✓${NC} Docker images ready"
+if docker compose -f "$ROOT/docker-compose.dev.yml" images -q 2>/dev/null | grep -q .; then
+  echo -e "  ${GREEN}✓${NC} Docker images already present (skipping pull)"
+else
+  docker compose -f "$ROOT/docker-compose.dev.yml" pull --quiet
+  echo -e "  ${GREEN}✓${NC} Docker images ready"
+fi
 echo ""
 
 # ── Done ───────────────────────────────────────────────────────────────────────
