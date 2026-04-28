@@ -23,7 +23,26 @@ bin/setup
 
 ## Development
 
-The recommended way to develop is with Docker so you don't need a local Ruby or PostgreSQL install.
+The fastest way to get started is the interactive CLI menu:
+
+```bash
+./bin/dev
+```
+
+This launches a menu-driven interface for all common tasks. On first run it auto-installs [gum](https://github.com/charmbracelet/gum) via Homebrew.
+
+| Key | Action |
+|-----|--------|
+| `1` | Start dev stack (Docker + hot-reload) |
+| `2` | Run test suite in Docker |
+| `3` | Deploy to an environment |
+| `4` | Release — bump version + tag + deploy |
+| `5` | Database operations (migrate / console / seed / reset) |
+| `6` | Tail service logs |
+| `7` | Stop dev stack |
+| `0` | Quit |
+
+Alternatively, use `make` directly:
 
 ### With Docker (recommended)
 
