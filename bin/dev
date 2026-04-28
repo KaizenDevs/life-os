@@ -34,6 +34,9 @@ ensure_gum() {
     echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" \
       | sudo tee /etc/apt/sources.list.d/charm.list
     sudo apt-get update && sudo apt-get install -y gum
+  elif command -v dnf &>/dev/null; then
+    echo -e "${YELLOW}dnf detected — install gum manually: https://github.com/charmbracelet/gum${RESET}"
+    exit 1
   else
     echo -e "${RED}Install gum manually: https://github.com/charmbracelet/gum${RESET}" && exit 1
   fi
@@ -63,6 +66,7 @@ run_cmd() {
 }
 
 # ── confirm prompt ────────────────────────────────────────────────────────────
+# Returns 0 on yes, 1 on no — callers must use || return to avoid set -e exit
 confirm() {
   gum confirm "$1"
 }
@@ -79,11 +83,14 @@ menu_deploy() {
 
   case "$target" in
     production*)
-      confirm "Deploy to PRODUCTION?" && make deploy ;;
+      confirm "Deploy to PRODUCTION?" || return
+      make deploy ;;
     staging*)
-      confirm "Deploy to staging?" && make deploy-staging ;;
+      confirm "Deploy to staging?" || return
+      make deploy-staging ;;
     test*)
-      confirm "Deploy to test?" && make deploy-test ;;
+      confirm "Deploy to test?" || return
+      make deploy-test ;;
     *back*) return ;;
   esac
 }
@@ -97,7 +104,8 @@ menu_release() {
   local version
   version=$(gum input --placeholder "e.g. 1.2.0" --prompt "  New version › ")
   [[ -z "$version" ]] && return
-  confirm "Tag and release v${version}?" && make release VERSION="$version"
+  confirm "Tag and release v${version}?" || return
+  make release VERSION="$version"
 }
 
 # ── db sub-menu ───────────────────────────────────────────────────────────────
@@ -115,7 +123,9 @@ menu_db() {
     migrate*)  run_cmd "Migrating..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:create db:migrate ;;
     console*)  docker compose -f "$COMPOSE_FILE" exec web bin/rails dbconsole ;;
     seed*)     run_cmd "Seeding..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:seed ;;
-    reset*)    confirm "Reset DB? All data lost." && run_cmd "Resetting..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:drop db:create db:migrate db:seed ;;
+    reset*)
+      confirm "Reset DB? All data lost." || return
+      run_cmd "Resetting..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:drop db:create db:migrate db:seed ;;
     *back*)    return ;;
   esac
 }
@@ -131,10 +141,10 @@ menu_logs() {
     "← back")
 
   case "$service" in
-    "all services")  docker compose -f "$COMPOSE_FILE" logs -f ;;
-    "web"*)          docker compose -f "$COMPOSE_FILE" logs -f web ;;
-    "db"*)           docker compose -f "$COMPOSE_FILE" logs -f db ;;
-    *back*)          return ;;
+    "all services") docker compose -f "$COMPOSE_FILE" logs -f ;;
+    web*)           docker compose -f "$COMPOSE_FILE" logs -f web ;;
+    db*)            docker compose -f "$COMPOSE_FILE" logs -f db ;;
+    *back*)         return ;;
   esac
 }
 
@@ -178,10 +188,10 @@ main_menu() {
     esac
 
     echo ""
-    echo -ne "  ${DIM}back to menu? [y/n] ›${RESET} "
+    echo -ne "  ${DIM}press any key for menu, q to quit ›${RESET} "
     read -r -n 1 -s ans
     echo ""
-    [[ "$ans" != "y" && "$ans" != "Y" ]] && echo -e "  ${DIM}bye${RESET}\n" && exit 0
+    [[ "$ans" == "q" || "$ans" == "Q" ]] && echo -e "  ${DIM}bye${RESET}\n" && exit 0
   done
 }
 

@@ -19,7 +19,7 @@ echo ""
 MISSING=0
 
 check() {
-  local cmd=$1 label=$2 hint=$3
+  local cmd=$1 label=$2 hint=${3:-}
   if command -v "$cmd" &>/dev/null; then
     echo -e "  ${GREEN}✓${NC} $label"
   else
