@@ -16,6 +16,8 @@ echo -e "${DIM}  ─────────────────────
 echo ""
 
 # ── Prerequisites ──────────────────────────────────────────────────────────────
+MISSING=0
+
 check() {
   local cmd=$1 label=$2 hint=$3
   if command -v "$cmd" &>/dev/null; then
@@ -25,8 +27,6 @@ check() {
     MISSING=1
   fi
 }
-
-MISSING=0
 echo -e "${YELLOW}Checking prerequisites...${NC}\n"
 check docker "Docker"   "install from https://docs.docker.com/get-docker"
 check bun    "Bun"      "install from https://bun.sh"

@@ -19,8 +19,15 @@ ensure_gum() {
   if [[ "$OSTYPE" == "darwin"* ]]; then
     brew install charmbracelet/tap/gum
   elif command -v apt-get &>/dev/null; then
+    # Dev-only tool install — verify the key matches expected fingerprint if security is a concern
+    # See https://github.com/charmbracelet/gum for manual install alternatives
+    local key
+    key=$(curl -fsSL --proto '=https' --tlsv1.2 https://repo.charm.sh/apt/gpg.key) || {
+      echo -e "${RED}Failed to fetch gum GPG key. Install manually: https://github.com/charmbracelet/gum${RESET}"
+      exit 1
+    }
     sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+    echo "$key" | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
     echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" \
       | sudo tee /etc/apt/sources.list.d/charm.list
     sudo apt-get update && sudo apt-get install -y gum
