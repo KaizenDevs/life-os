@@ -56,7 +56,7 @@ print_header() {
 # ── run with spinner ──────────────────────────────────────────────────────────
 run_cmd() {
   local title="$1"; shift
-  gum spin --spinner dot --title " ${title}" -- bash -c "$*"
+  gum spin --spinner dot --title " ${title}" -- bash -c "$1" _ "${@:2}"
 }
 
 # ── confirm prompt ────────────────────────────────────────────────────────────
