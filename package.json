@@ -2,8 +2,12 @@
   "name": "life-os",
   "private": true,
   "scripts": {
+    "menu": "./bin/dev",
     "dev": "bun run --cwd frontend dev",
     "test": "bun test",
     "build": "bun run --cwd frontend build"
+  },
+  "devDependencies": {
+    "playwright": "^1.59.1"
   }
 }
