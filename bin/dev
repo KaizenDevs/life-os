@@ -1,0 +1,201 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ── config ────────────────────────────────────────────────────────────────────
+COMPOSE_FILE="docker-compose.dev.yml"
+
+# ── colors ────────────────────────────────────────────────────────────────────
+RESET="\033[0m"
+BOLD="\033[1m"
+DIM="\033[2m"
+RED="\033[38;5;203m"
+GREEN="\033[38;5;114m"
+YELLOW="\033[38;5;221m"
+BLUE="\033[38;5;111m"
+PURPLE="\033[38;5;183m"
+CYAN="\033[38;5;159m"
+
+# ── gum bootstrap ─────────────────────────────────────────────────────────────
+ensure_gum() {
+  if command -v gum &>/dev/null; then return; fi
+  echo -e "${YELLOW}Installing gum (Charm CLI)...${RESET}"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    brew install charmbracelet/tap/gum
+  elif command -v apt-get &>/dev/null; then
+    # Dev-only tool install — verify the key matches expected fingerprint if security is a concern
+    # See https://github.com/charmbracelet/gum for manual install alternatives
+    local key
+    key=$(curl -fsSL --proto '=https' --tlsv1.2 https://repo.charm.sh/apt/gpg.key) || {
+      echo -e "${RED}Failed to fetch gum GPG key. Install manually: https://github.com/charmbracelet/gum${RESET}"
+      exit 1
+    }
+    sudo mkdir -p /etc/apt/keyrings
+    echo "$key" | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" \
+      | sudo tee /etc/apt/sources.list.d/charm.list
+    sudo apt-get update && sudo apt-get install -y gum
+  elif command -v dnf &>/dev/null; then
+    echo -e "${YELLOW}dnf detected — install gum manually: https://github.com/charmbracelet/gum${RESET}"
+    exit 1
+  else
+    echo -e "${RED}Install gum manually: https://github.com/charmbracelet/gum${RESET}" && exit 1
+  fi
+}
+
+# ── header ────────────────────────────────────────────────────────────────────
+print_header() {
+  local version
+  version=$(cat "$(git rev-parse --show-toplevel)/VERSION" 2>/dev/null || echo "?")
+  echo ""
+  echo -e "${PURPLE}${BOLD}"
+  echo "  ██╗     ██╗███████╗███████╗      ██████╗ ███████╗"
+  echo "  ██║     ██║██╔════╝██╔════╝     ██╔═══██╗██╔════╝"
+  echo "  ██║     ██║█████╗  █████╗       ██║   ██║███████╗"
+  echo "  ██║     ██║██╔══╝  ██╔══╝       ██║   ██║╚════██║"
+  echo "  ███████╗██║██║     ███████╗     ╚██████╔╝███████║"
+  echo "  ╚══════╝╚═╝╚═╝     ╚══════╝      ╚═════╝ ╚══════╝"
+  echo -e "${RESET}"
+  echo -e "  ${DIM}v${version}  •  your life, automated${RESET}"
+  echo ""
+}
+
+# ── run with spinner ──────────────────────────────────────────────────────────
+run_cmd() {
+  local title="$1"; shift
+  gum spin --spinner dot --title " ${title}" -- "$@"
+}
+
+# ── confirm prompt ────────────────────────────────────────────────────────────
+# Returns 0 on yes, 1 on no — callers must use || return to avoid set -e exit
+confirm() {
+  gum confirm "$1"
+}
+
+# ── deploy sub-menu ───────────────────────────────────────────────────────────
+menu_deploy() {
+  echo -e "\n${CYAN}${BOLD}  Deploy target${RESET}\n"
+  local target
+  target=$(gum choose \
+    "production   — Pi, main branch" \
+    "staging      — staging environment" \
+    "test         — test environment" \
+    "← back")
+
+  case "$target" in
+    production*)
+      confirm "Deploy to PRODUCTION?" || return
+      make deploy ;;
+    staging*)
+      confirm "Deploy to staging?" || return
+      make deploy-staging ;;
+    test*)
+      confirm "Deploy to test?" || return
+      make deploy-test ;;
+    *back*) return ;;
+  esac
+}
+
+# ── release sub-menu ──────────────────────────────────────────────────────────
+menu_release() {
+  echo -e "\n${CYAN}${BOLD}  Release version${RESET}\n"
+  local current
+  current=$(cat "$(git rev-parse --show-toplevel)/VERSION" 2>/dev/null || echo "0.0.0")
+  echo -e "  ${DIM}current: v${current}${RESET}\n"
+  local version
+  version=$(gum input --placeholder "e.g. 1.2.0" --prompt "  New version › ")
+  [[ -z "$version" ]] && return
+  confirm "Tag and release v${version}?" || return
+  make release VERSION="$version"
+}
+
+# ── db sub-menu ───────────────────────────────────────────────────────────────
+menu_db() {
+  echo -e "\n${CYAN}${BOLD}  Database${RESET}\n"
+  local action
+  action=$(gum choose \
+    "migrate     — db:create + db:migrate" \
+    "console     — Rails db console (Docker)" \
+    "seed        — db:seed" \
+    "reset       — drop + create + migrate + seed" \
+    "← back")
+
+  case "$action" in
+    migrate*)  run_cmd "Migrating..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:create db:migrate ;;
+    console*)  docker compose -f "$COMPOSE_FILE" exec web bin/rails dbconsole ;;
+    seed*)     run_cmd "Seeding..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:seed ;;
+    reset*)
+      confirm "Reset DB? All data lost." || return
+      run_cmd "Resetting..." docker compose -f "$COMPOSE_FILE" exec web bin/rails db:drop db:create db:migrate db:seed ;;
+    *back*)    return ;;
+  esac
+}
+
+# ── logs sub-menu ─────────────────────────────────────────────────────────────
+menu_logs() {
+  echo -e "\n${CYAN}${BOLD}  Logs${RESET}\n"
+  local service
+  service=$(gum choose \
+    "all services" \
+    "web (Rails)" \
+    "db (Postgres)" \
+    "← back")
+
+  case "$service" in
+    "all services") docker compose -f "$COMPOSE_FILE" logs -f ;;
+    web*)           docker compose -f "$COMPOSE_FILE" logs -f web ;;
+    db*)            docker compose -f "$COMPOSE_FILE" logs -f db ;;
+    *back*)         return ;;
+  esac
+}
+
+# ── print main menu ───────────────────────────────────────────────────────────
+print_menu() {
+  echo -e "  ${BLUE}1${RESET}  ▶  dev       ${DIM}start dev stack (Docker + hot-reload)${RESET}"
+  echo -e "  ${BLUE}2${RESET}  ◎  test      ${DIM}run test suite in Docker${RESET}"
+  echo -e "  ${BLUE}3${RESET}  ▲  deploy    ${DIM}push to an environment${RESET}"
+  echo -e "  ${BLUE}4${RESET}  ◆  release   ${DIM}bump version + tag + deploy${RESET}"
+  echo -e "  ${BLUE}5${RESET}  ▤  db        ${DIM}database operations${RESET}"
+  echo -e "  ${BLUE}6${RESET}  ≡  logs      ${DIM}tail service logs${RESET}"
+  echo -e "  ${BLUE}7${RESET}  ■  stop      ${DIM}halt dev stack${RESET}"
+  echo -e "  ${BLUE}0${RESET}  ×  quit"
+  echo ""
+  echo -ne "  ${DIM}press key ›${RESET} "
+}
+
+# ── main menu ─────────────────────────────────────────────────────────────────
+main_menu() {
+  while true; do
+    print_header
+    print_menu
+
+    local key
+    read -r -n 1 -s key
+    echo ""
+
+    case "$key" in
+      1)  echo -e "\n  ${GREEN}▶ starting dev stack...${RESET}\n"
+          docker compose -f "$COMPOSE_FILE" up ;;
+      2)  echo -e "\n  ${GREEN}◎ running tests...${RESET}\n"
+          make test-docker ;;
+      3)  menu_deploy ;;
+      4)  menu_release ;;
+      5)  menu_db ;;
+      6)  menu_logs ;;
+      7)  run_cmd "halting dev stack..." docker compose -f "$COMPOSE_FILE" down
+          echo -e "\n  ${GREEN}■ stopped.${RESET}" ;;
+      0)  echo -e "\n  ${DIM}bye${RESET}\n"; exit 0 ;;
+      *)  echo -e "  ${RED}unknown key '${key}' — try again${RESET}" ;;
+    esac
+
+    echo ""
+    echo -ne "  ${DIM}press any key for menu, q to quit ›${RESET} "
+    read -r -n 1 -s ans
+    echo ""
+    [[ "$ans" == "q" || "$ans" == "Q" ]] && echo -e "  ${DIM}bye${RESET}\n" && exit 0
+  done
+}
+
+# ── entrypoint ────────────────────────────────────────────────────────────────
+cd "$(git rev-parse --show-toplevel)"
+ensure_gum
+main_menu
