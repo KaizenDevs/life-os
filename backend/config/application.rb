@@ -44,6 +44,9 @@ module Backend
     require_relative "../app/middleware/jwt_decode_error_handler"
     config.middleware.insert_before Warden::Manager, JwtDecodeErrorHandler
 
+    require_relative "../app/middleware/no_cache_index"
+    config.middleware.insert_before ActionDispatch::Static, NoCacheIndex
+
     config.middleware.use Rack::Attack
   end
 end
